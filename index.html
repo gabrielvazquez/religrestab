@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -274,6 +275,19 @@
   .badge-24h{ background:var(--amber-soft); color:var(--amber); }
   .badge-ok{ background:var(--green-soft); color:var(--green); }
 
+  .exclude-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .exclude-row .toolbar-search{ max-width:280px; }
+  .exclude-chips{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .exclude-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+    background:var(--red-soft); color:var(--red); padding:5px 8px 5px 12px; border-radius:20px;
+  }
+  .exclude-chip-remove{
+    border:none; background:none; color:var(--red); font-size:15px; line-height:1; cursor:pointer;
+    padding:2px 4px; font-weight:800;
+  }
+  .exclude-empty{ font-size:12px; color:var(--gray-500); }
+
   .empty-state{ text-align:center; padding:50px 20px; color:var(--gray-500); font-size:13.5px; }
 
   .table-wrap{ overflow-x:auto; }
@@ -355,6 +369,120 @@
   .login-error{ font-size:12px; color:var(--red); text-align:center; margin-top:10px; min-height:14px; }
   .btn-logout{ width:100%; justify-content:center; margin-top:8px; color:var(--red); background:var(--red-soft); border-color:var(--red-soft); }
   .btn-logout:hover{ background:#FBD9D9; }
+
+  /* ---------- prazo cell + popover ---------- */
+  .prazo-cell{ display:flex; flex-direction:column; gap:3px; cursor:pointer; border-radius:6px; padding:4px 6px; margin:-4px -6px; }
+  .prazo-cell:hover{ background:var(--orange-soft); }
+  .prazo-date{ font-weight:600; color:var(--gray-900); }
+  .prazo-remain{ font-size:11px; font-weight:700; }
+  .prazo-remain.ok{ color:var(--green); }
+  .prazo-remain.warn{ color:var(--amber); }
+  .prazo-remain.bad{ color:var(--red); }
+  .prazo-popover{
+    position:fixed; z-index:80; background:var(--white); border:1px solid var(--gray-200);
+    border-radius:10px; box-shadow:0 12px 28px rgba(20,22,28,.18); padding:14px 16px;
+    min-width:220px; opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .12s ease, transform .12s ease;
+  }
+  .prazo-popover.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .prazo-popover-title{ font-size:11px; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px; }
+  .prazo-popover-row{ display:flex; justify-content:space-between; gap:14px; font-size:13px; padding:5px 0; border-bottom:1px solid var(--gray-100); }
+  .prazo-popover-row:last-child{ border-bottom:none; }
+  .prazo-popover-label{ color:var(--gray-500); }
+  .prazo-popover-val{ font-weight:700; text-align:right; }
+
+  /* ---------- exclude / management panels ---------- */
+  .manage-panel .panel-head{ margin-bottom:12px; }
+  .manage-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .manage-row select.filter-select{ min-width:240px; flex:1; max-width:380px; }
+  .save-status{ display:flex; align-items:center; gap:8px; margin-left:auto; font-size:12px; color:var(--gray-500); }
+  .save-status.dirty{ color:var(--amber); font-weight:600; }
+  .save-status.saved{ color:var(--green); font-weight:600; }
+  .btn-save{ background:var(--green); border-color:var(--green); color:#fff; }
+  .btn-save:hover{ background:#128a3e; }
+  .btn-save:disabled{ opacity:.5; cursor:default; }
+  .btn-danger{ color:var(--red); border-color:var(--red-soft); background:var(--red-soft); }
+  .btn-danger:hover{ background:#FBD9D9; }
+  .team-restore-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+    background:var(--gray-100); color:var(--gray-700); padding:5px 8px 5px 12px; border-radius:20px;
+  }
+  .team-restore-chip button{ border:none; background:none; color:var(--gray-700); font-size:15px; line-height:1; cursor:pointer; padding:2px 4px; font-weight:800; }
+
+  /* ---------- primarization quick filter ---------- */
+  .btn-primarization{ border-color:var(--red); color:var(--red); background:var(--red-soft); font-weight:700; }
+  .btn-primarization:hover{ background:#FBD9D9; }
+  .btn-primarization.active{ background:var(--red); border-color:var(--red); color:#fff; box-shadow:0 3px 10px rgba(220,38,38,.28); }
+
+  /* ---------- OS modal (substitui o drawer lateral) ---------- */
+  .os-modal-overlay{
+    position:fixed; inset:0; background:rgba(20,22,28,.45); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity .16s ease;
+  }
+  .os-modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .os-modal{
+    width:100%; max-width:760px; max-height:88vh; background:var(--white); border-radius:16px;
+    box-shadow:0 30px 70px rgba(10,14,30,.35); display:flex; flex-direction:column;
+    transform:translateY(10px) scale(.98); transition:transform .16s ease; overflow:hidden;
+  }
+  .os-modal-overlay.show .os-modal{ transform:translateY(0) scale(1); }
+  .os-modal-head{ padding:20px 24px; border-bottom:1px solid var(--gray-200); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex:none; }
+  .os-modal-title{ font-size:18px; font-weight:800; }
+  .os-modal-sub{ font-size:12.5px; color:var(--gray-500); margin-top:3px; }
+  .os-modal-close{ border:none; background:var(--gray-100); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--gray-700); flex:none; }
+  .os-modal-body{ padding:20px 24px; overflow-y:auto; flex:1; }
+  .os-modal-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
+  @media (max-width:640px){ .os-modal-grid{ grid-template-columns:1fr; } }
+  .os-modal-foot{ padding:16px 24px; border-top:1px solid var(--gray-200); display:flex; gap:10px; justify-content:flex-end; flex:none; }
+  .btn-copy-os{ background:var(--orange); border-color:var(--orange); color:#fff; }
+  .btn-copy-os:hover{ background:var(--orange-dark); }
+  .btn-copy-os.copied{ background:var(--green); border-color:var(--green); }
+
+  /* ---------- own-team badge ---------- */
+  .badge-own-team{ background:var(--green-soft); color:var(--green); }
+  tr.own-team-row{ background:var(--green-soft); }
+  tr.own-team-row:hover{ background:#DDF4E4; }
+
+  /* ---------- teams registry ---------- */
+  .team-name-cell{ cursor:pointer; }
+  .team-name-cell:hover .team-name-link{ text-decoration:underline; }
+  .team-status-active{ background:var(--green-soft); color:var(--green); }
+  .team-status-inactive{ background:var(--gray-100); color:var(--gray-500); }
+
+  /* ---------- ranking ---------- */
+  .ranking-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; }
+  @media (max-width:980px){ .ranking-grid{ grid-template-columns:1fr; } }
+  .rank-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100); font-size:12.5px; }
+  .rank-row:last-child{ border-bottom:none; }
+  .rank-pos{ width:20px; flex:none; font-weight:800; color:var(--gray-500); }
+  .rank-name{ flex:1; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rank-val{ font-weight:700; flex:none; }
+
+  /* ---------- historico page ---------- */
+  .period-toggle{ display:flex; gap:6px; }
+  .period-toggle button{
+    font-size:12px; font-weight:600; padding:6px 12px; border-radius:8px; border:1px solid var(--gray-300);
+    background:var(--white); color:var(--gray-700); cursor:pointer;
+  }
+  .period-toggle button.active{ background:var(--orange); border-color:var(--orange); color:#fff; }
+  .chart-bars{ display:flex; align-items:flex-end; gap:8px; height:180px; padding-top:10px; }
+  .chart-bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; min-width:0; }
+  .chart-bar{ width:100%; max-width:34px; border-radius:5px 5px 0 0; background:linear-gradient(180deg,#93C5FD,#3B82F6); min-height:2px; }
+  .chart-bar.late{ background:linear-gradient(180deg,#FCA5A5,#DC2626); }
+  .chart-bar-label{ font-size:10px; color:var(--gray-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:44px; }
+  .chart-bar-val{ font-size:10.5px; font-weight:700; color:var(--gray-700); }
+  .sla-trend{ display:flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; }
+
+  /* ---------- generic form modal (equipe cadastro) ---------- */
+  .form-modal-overlay{
+    position:fixed; inset:0; background:rgba(20,22,28,.45); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity .16s ease;
+  }
+  .form-modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .form-modal{ width:100%; max-width:440px; background:var(--white); border-radius:16px; box-shadow:0 30px 70px rgba(10,14,30,.35); padding:22px 24px; max-height:88vh; overflow-y:auto; }
+  .form-modal h3{ margin:0 0 16px; font-size:16px; font-weight:800; }
+  .form-modal textarea{ width:100%; padding:10px 12px; border:1px solid var(--gray-300); border-radius:9px; font-size:13.5px; outline:none; font-family:inherit; resize:vertical; min-height:64px; }
 </style>
 </head>
 <body>
@@ -409,6 +537,10 @@
       <button class="nav-item" data-tab="equipes">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Equipes
+      </button>
+      <button class="nav-item" data-tab="historico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15v4"/><path d="M11 11v8"/><path d="M15 7v12"/><path d="M19 4v15"/></svg>
+        Histórico
       </button>
       <a class="nav-item" id="lateNavButton" data-tab="atraso" href="#tab-ordens" onclick="return openLateOrders(event)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -483,18 +615,10 @@
             <div class="page-sub">Acompanhamento das ordens de serviço de primarização por região, equipe e prazo</div>
           </div>
           <div class="head-actions">
-            <input class="upload-input" id="fileImport" type="file" accept=".csv,.xlsx,.xls">
-            <button class="btn" id="btnImport" data-admin-only="1" style="display:none;" title="Aceita CSV, XLSX e XLS">
+            <input class="upload-input" id="fileImport" type="file" accept=".csv,.xlsx,.xls" multiple>
+            <button class="btn btn-primary" id="btnImport" data-admin-only="1" style="display:none;" title="Aceita CSV, XLSX e XLS">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
               Importar planilha
-            </button>
-            <button class="btn" id="btnExportOverview">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Exportar CSV
-            </button>
-            <button class="btn btn-primary" id="btnGoTable">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4" fill="white"/><circle cx="4.5" cy="12" r="1.4" fill="white"/><circle cx="4.5" cy="18" r="1.4" fill="white"/></svg>
-              Ver todas as OS
             </button>
           </div>
           <div class="import-note" id="importMessage" aria-live="polite"></div>
@@ -546,6 +670,9 @@
             <div class="page-sub" id="ordensSubtitle">Todas as ordens de religação e restabelecimento — filtre, ordene e exporte</div>
           </div>
           <div class="head-actions">
+            <button class="btn btn-primarization" id="btnPrimarizationFilter" type="button" title="Mostrar apenas os serviços de primarização">
+              🔴 Primarização
+            </button>
             <button class="btn" id="btnExportTable">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
               Exportar CSV
@@ -553,6 +680,21 @@
           </div>
         </div>
 
+        <div class="panel manage-panel" data-admin-only="1" style="display:none;">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Filtro de serviços excluídos</div>
+              <div class="panel-sub">Escolha um tema/serviço na lista para escondê-lo do painel. As OS continuam nos dados, só ficam ocultas.</div>
+            </div>
+            <div class="save-status" id="serviceSaveStatus"></div>
+          </div>
+          <div class="manage-row">
+            <select class="filter-select" id="excludeServiceSelect"><option value="">Selecione um serviço para excluir...</option></select>
+            <button class="btn" id="btnExcludeService" type="button">Excluir tema</button>
+            <button class="btn btn-save" id="btnSaveServiceExclusions" type="button" disabled>Salvar alterações</button>
+          </div>
+          <div class="exclude-chips" id="excludedChips"></div>
+        </div>
         <div class="panel">
           <div class="table-toolbar">
             <div class="toolbar-search">
@@ -560,6 +702,7 @@
               <input id="tableSearch" placeholder="Buscar por OS, endereço, bairro...">
             </div>
             <select class="filter-select" id="filterRegiao"><option value="">Todas as regiões</option></select>
+            <select class="filter-select" id="filterServico"><option value="">Todos os serviços</option></select>
             <select class="filter-select" id="filterStatus"><option value="">Todos os status</option></select>
             <select class="filter-select" id="filterSituacao">
               <option value="">Toda situação de prazo</option>
@@ -587,19 +730,62 @@
         <div class="page-head">
           <div>
             <div class="page-title">Equipes de Primarização</div>
-            <div class="page-sub">Volume de ordens, status e regiões atendidas por equipe</div>
+            <div class="page-sub">Cadastro, volume de ordens, status e regiões atendidas por equipe · clique numa equipe para ver os indicadores</div>
+          </div>
+          <div class="head-actions">
+            <div class="head-actions" data-admin-only="1" style="display:none;">
+              <button class="btn btn-primary" id="btnNewTeam" type="button">+ Nova equipe</button>
+              <span class="save-status" id="teamSaveStatus"></span>
+              <button class="btn btn-save" id="btnSaveTeams" type="button" disabled>Salvar equipes</button>
+            </div>
           </div>
         </div>
+        <div class="panel" id="excludedTeamsPanel" data-admin-only="1" style="display:none;">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Equipes removidas do painel</div>
+              <div class="panel-sub">Use o botão "Excluir" na tabela abaixo para retirar uma equipe. Clique em "Salvar equipes" para manter a alteração.</div>
+            </div>
+          </div>
+          <div class="exclude-chips" id="excludedTeamsChips"></div>
+        </div>
         <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Cadastro de equipes</div>
+              <div class="panel-sub">Equipes cadastradas são reconhecidas automaticamente nas planilhas importadas e destacadas em verde com o selo ✅ Equipe Própria</div>
+            </div>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Equipe</th><th>Região(ões)</th><th>Total OS</th><th>Despachadas</th><th>Em atraso</th><th>&lt;24h</th>
+                  <th>Equipe</th><th>Região(ões)</th><th>Total OS</th><th>Despachadas</th><th>Em atraso</th><th>&lt;24h</th><th>Cadastro</th><th></th>
                 </tr>
               </thead>
               <tbody id="teamTableBody"></tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="panel-head" style="margin-bottom:14px;">
+          <div>
+            <div class="panel-title" style="font-size:17px;">Ranking de equipes</div>
+            <div class="panel-sub">Comparativo de volume, produtividade e atrasos na seleção atual</div>
+          </div>
+        </div>
+        <div class="ranking-grid">
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Por volume</div><div class="panel-sub">Total de OS executadas</div></div></div>
+            <div id="rankVolume"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Por produtividade</div><div class="panel-sub">Serviços executados vs. SLA</div></div></div>
+            <div id="rankProdutividade"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="panel-title">Por atrasos</div><div class="panel-sub">Quantidade e % de atraso</div></div></div>
+            <div id="rankAtrasos"></div>
           </div>
         </div>
       </div>
@@ -620,6 +806,44 @@
             </table>
           </div>
           <div class="empty-state" id="lateEmptyState" style="display:none;">Nenhuma ordem em atraso no momento. 🎉</div>
+        </div>
+      </div>
+
+      <!-- ===================== HISTÓRICO TAB ===================== -->
+      <div id="tab-historico" class="tab-pane" style="display:none;">
+        <div class="page-head">
+          <div>
+            <div class="page-title">📊 Histórico</div>
+            <div class="page-sub">Consolidado de todos os dados importados ao longo do tempo</div>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="histKpiRow"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Produção</div>
+              <div class="panel-sub" id="histProdSub">Ordens inseridas por período</div>
+            </div>
+            <div class="period-toggle" id="histPeriodToggle">
+              <button type="button" data-period="day" class="active">Dia</button>
+              <button type="button" data-period="week">Semana</button>
+              <button type="button" data-period="month">Mês</button>
+            </div>
+          </div>
+          <div class="chart-bars" id="histProdChart"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Atrasos</div>
+              <div class="panel-sub">Quantidade de atrasos por período e evolução do SLA</div>
+            </div>
+          </div>
+          <div class="chart-bars" id="histLateChart"></div>
+          <div class="mini-kpi-row" id="histLateSummary" style="margin-top:16px;"></div>
         </div>
       </div>
 
@@ -672,19 +896,76 @@
   </div>
 </div>
 
-<div class="overlay" id="overlay"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-head">
-    <div>
-      <div class="drawer-title" id="drawerTitle">OS</div>
-      <div class="drawer-sub" id="drawerSub"></div>
+<!-- ===================== OS MODAL (completo) ===================== -->
+<div class="os-modal-overlay" id="osModalOverlay">
+  <div class="os-modal">
+    <div class="os-modal-head">
+      <div>
+        <div class="os-modal-title" id="osModalTitle">OS</div>
+        <div class="os-modal-sub" id="osModalSub"></div>
+      </div>
+      <button class="os-modal-close" id="osModalClose" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     </div>
-    <button class="drawer-close" id="drawerClose">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
+    <div class="os-modal-body">
+      <div class="os-modal-grid" id="osModalGrid"></div>
+      <div class="field-note" id="osModalCausa" style="display:none;"></div>
+    </div>
+    <div class="os-modal-foot">
+      <button class="btn btn-copy-os" id="btnCopyOs" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="btnCopyOsLabel">Copiar OS</span>
+      </button>
+      <button class="btn" id="osModalCloseFoot" type="button">Fechar</button>
+    </div>
   </div>
-  <div class="drawer-body" id="drawerBody"></div>
 </div>
+
+<!-- ===================== EQUIPE: modal de cadastro ===================== -->
+<div class="form-modal-overlay" id="teamFormOverlay">
+  <div class="form-modal">
+    <h3 id="teamFormTitle">Nova equipe</h3>
+    <input type="hidden" id="teamFormOriginalName">
+    <label class="field-label">Nome da equipe</label>
+    <input class="field-input" id="teamFormName" placeholder="Ex.: PRIMARIZAÇÃO - FULANO DE TAL">
+    <label class="field-label">Integrantes</label>
+    <input class="field-input" id="teamFormMembers" placeholder="Nomes separados por vírgula">
+    <label class="field-label">Status</label>
+    <select class="filter-select" id="teamFormStatus" style="width:100%;">
+      <option value="ativa">Ativa</option>
+      <option value="inativa">Inativa</option>
+    </select>
+    <label class="field-label">Observações</label>
+    <textarea id="teamFormObs" placeholder="Observações sobre a equipe"></textarea>
+    <div class="login-error" id="teamFormError"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-primary" id="btnSaveTeamForm" type="button">Salvar</button>
+      <button class="btn" id="btnCancelTeamForm" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EQUIPE: modal de detalhes/indicadores ===================== -->
+<div class="os-modal-overlay" id="teamDetailOverlay">
+  <div class="os-modal">
+    <div class="os-modal-head">
+      <div>
+        <div class="os-modal-title" id="teamDetailTitle">Equipe</div>
+        <div class="os-modal-sub" id="teamDetailSub"></div>
+      </div>
+      <button class="os-modal-close" id="teamDetailClose" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="os-modal-body" id="teamDetailBody"></div>
+    <div class="os-modal-foot">
+      <button class="btn" id="teamDetailCloseFoot" type="button">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="prazo-popover" id="prazoPopover"></div>
 
 <script>
 const RAW_DATA = [{"os": 2636375258, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA LEANDRO DE CARVALHO", "numero": 347, "complemento": "", "bairro": "V MONUMENTO", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-09 14:59:00", "dataCompetencia": "2026-09-09 14:58:00", "prazoExecucao": "2026-09-11 14:58:00", "tempoResidual": "5h,31m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636376706, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA DA ALFANDEGA", "numero": 64, "complemento": "", "bairro": "BRAS", "municipio": "SÃO PAULO", "setor": 2, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-09 15:34:00", "dataCompetencia": "2026-09-09 15:07:00", "prazoExecucao": "2026-09-11 15:07:00", "tempoResidual": "5h,40m", "causa": "CONTINUA - SERVIÇO NÃO CONCLUÍDO", "contrato": "9999999999 - SABESP"}, {"os": 2636392899, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR AGUA IMPEDIMENTO DE LEITURA", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "AVENIDA DOM PEDRO I", "numero": 893, "complemento": "BCA JORNAL", "bairro": "CAMBUCI", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-09 18:09:00", "dataCompetencia": "2026-09-09 18:08:00", "prazoExecucao": "2026-09-11 18:08:00", "tempoResidual": "8h,41m", "causa": "IMÓVEL FECHADO, REPROGRAMAR ORDEM", "contrato": "9999999999 - SABESP"}, {"os": 2636465010, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "ALAMEDA BARAO DE PIRACICABA", "numero": 503, "complemento": "", "bairro": "CAMPOS ELISEOS", "municipio": "SÃO PAULO", "setor": 8, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 08:49:00", "dataCompetencia": "2026-09-10 08:48:00", "prazoExecucao": "2026-09-12 08:48:00", "tempoResidual": "23h,22m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636366519, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR AGUA DEB COM SERVIÇO ADICIONAL", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "AVENIDA IPIRANGA", "numero": 747, "complemento": "A", "bairro": "CENTRO", "municipio": "SÃO PAULO", "setor": 7, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 09:13:00", "dataCompetencia": "2026-09-09 14:02:00", "prazoExecucao": "2026-09-11 14:02:00", "tempoResidual": "4h,35m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636468106, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA FORTUNATO", "numero": 79, "complemento": "", "bairro": "STA CECILIA", "municipio": "SÃO PAULO", "setor": 7, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 09:16:00", "dataCompetencia": "2026-09-10 09:16:00", "prazoExecucao": "2026-09-12 09:16:00", "tempoResidual": "23h,49m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636385143, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR AGUA IMPEDIMENTO DE LEITURA", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA CONEGO JANUARIO", "numero": 201, "complemento": "", "bairro": "IPIRANGA", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 11:06:00", "dataCompetencia": "2026-09-10 11:06:00", "prazoExecucao": "2026-09-12 11:06:00", "tempoResidual": "1d,1h,39m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636492969, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA ENGENHEIRO LAURO PENTEADO", "numero": 67, "complemento": "C/1", "bairro": "V MONUMENTO", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 11:50:00", "dataCompetencia": "2026-09-10 11:49:00", "prazoExecucao": "2026-09-12 11:49:00", "tempoResidual": "1d,2h,22m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636509169, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA VISCONDE DE PARNAIBA", "numero": 2288, "complemento": "", "bairro": "BRAS", "municipio": "SÃO PAULO", "setor": 27, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:04:00", "dataCompetencia": "2026-09-10 14:03:00", "prazoExecucao": "2026-09-12 14:03:00", "tempoResidual": "1d,4h,36m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636509263, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA DOUTOR DAVID IAMPOLSKY", "numero": 85, "complemento": "", "bairro": "PTE PEQUENA", "municipio": "SÃO PAULO", "setor": 18, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:05:00", "dataCompetencia": "2026-09-10 14:04:00", "prazoExecucao": "2026-09-12 14:04:00", "tempoResidual": "1d,4h,37m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636509898, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA MELO BARRETO", "numero": 71, "complemento": "", "bairro": "BRAS", "municipio": "SÃO PAULO", "setor": 3, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:09:00", "dataCompetencia": "2026-09-10 14:09:00", "prazoExecucao": "2026-09-12 14:09:00", "tempoResidual": "1d,4h,42m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636510178, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA JEAN DEGREEF", "numero": 120, "complemento": "", "bairro": "V CRISTINA", "municipio": "SÃO PAULO", "setor": 157, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:11:00", "dataCompetencia": "2026-09-10 14:10:00", "prazoExecucao": "2026-09-12 14:10:00", "tempoResidual": "1d,4h,43m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511099, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA MONTEIRO", "numero": 143, "complemento": "", "bairro": "V MONUMENTO", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:20:00", "dataCompetencia": "2026-09-10 14:16:00", "prazoExecucao": "2026-09-12 14:16:00", "tempoResidual": "1d,4h,49m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511200, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA AGOSTINHO GOMES", "numero": 672, "complemento": "", "bairro": "IPIRANGA", "municipio": "SÃO PAULO", "setor": 35, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:22:00", "dataCompetencia": "2026-09-10 14:17:00", "prazoExecucao": "2026-09-12 14:17:00", "tempoResidual": "1d,4h,50m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511168, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA BRIGADEIRO GALVAO", "numero": 254, "complemento": "", "bairro": "BARRA FUNDA", "municipio": "SÃO PAULO", "setor": 20, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:22:00", "dataCompetencia": "2026-09-10 14:16:00", "prazoExecucao": "2026-09-12 14:16:00", "tempoResidual": "1d,4h,49m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511207, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA SALVADOR SIMOES", "numero": 928, "complemento": "", "bairro": "V D PEDRO I", "municipio": "SÃO PAULO", "setor": 43, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:22:00", "dataCompetencia": "2026-09-10 14:17:00", "prazoExecucao": "2026-09-12 14:17:00", "tempoResidual": "1d,4h,50m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511252, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA CORONEL MORAIS", "numero": 112, "complemento": "", "bairro": "PARI", "municipio": "SÃO PAULO", "setor": 17, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:23:00", "dataCompetencia": "2026-09-10 14:17:00", "prazoExecucao": "2026-09-12 14:17:00", "tempoResidual": "1d,4h,50m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511326, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA AURORA", "numero": 334, "complemento": "C/1", "bairro": "CAMPOS ELISEOS", "municipio": "SÃO PAULO", "setor": 8, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:23:00", "dataCompetencia": "2026-09-10 14:17:00", "prazoExecucao": "2026-09-12 14:17:00", "tempoResidual": "1d,4h,50m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636512195, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA SOLIMOES", "numero": 341, "complemento": "", "bairro": "BARRA FUNDA", "municipio": "SÃO PAULO", "setor": 19, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:32:00", "dataCompetencia": "2026-09-10 14:22:00", "prazoExecucao": "2026-09-12 14:22:00", "tempoResidual": "1d,4h,56m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636512556, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA JUCARA", "numero": 372, "complemento": "", "bairro": "BOSQUE DA SAUDE", "municipio": "SÃO PAULO", "setor": 46, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:33:00", "dataCompetencia": "2026-09-10 14:25:00", "prazoExecucao": "2026-09-12 14:25:00", "tempoResidual": "1d,4h,58m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636513766, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA SEBASTIANO MAZZONI", "numero": 581, "complemento": "C/3", "bairro": "V MORAES", "municipio": "SÃO PAULO", "setor": 48, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:35:00", "dataCompetencia": "2026-09-10 14:34:00", "prazoExecucao": "2026-09-12 14:34:00", "tempoResidual": "1d,5h,8m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636513618, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "AVENIDA LINS DE VASCONCELOS", "numero": 1506, "complemento": "A", "bairro": "ACLIMACAO", "municipio": "SÃO PAULO", "setor": 34, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 14:34:00", "dataCompetencia": "2026-09-10 14:33:00", "prazoExecucao": "2026-09-12 14:33:00", "tempoResidual": "1d,5h,6m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636534520, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA PROFESSOR JOAO RAMOS DA COSTA", "numero": 50, "complemento": "C/3", "bairro": "PQ BRISTOL", "municipio": "SÃO PAULO", "setor": 157, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-10 16:58:00", "dataCompetencia": "2026-09-10 15:20:00", "prazoExecucao": "2026-09-12 15:20:00", "tempoResidual": "1d,5h,53m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636647893, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ADAILTON ALVES DOS SANTOS", "endereco": "RUA PROFESSOR ARNALDO JOAO SEMERARO", "numero": 1000, "complemento": "", "bairro": "JD STA EMILIA", "municipio": "SÃO PAULO", "setor": 157, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 08:25:00", "dataCompetencia": "2026-09-10 17:35:00", "prazoExecucao": "2026-09-12 17:35:00", "tempoResidual": "1d,8h,8m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636623564, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA CONSELHEIRO BROTERO", "numero": 224, "complemento": "", "bairro": "BARRA FUNDA", "municipio": "SÃO PAULO", "setor": 20, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 05:13:00", "dataCompetencia": "2026-09-10 16:20:00", "prazoExecucao": "2026-09-12 16:20:00", "tempoResidual": "1d,6h,53m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636631319, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA DOUTOR GABRIEL DOS SANTOS", "numero": 30, "complemento": "", "bairro": "STA CECILIA", "municipio": "SÃO PAULO", "setor": 20, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 06:24:00", "dataCompetencia": "2026-09-10 16:27:00", "prazoExecucao": "2026-09-12 16:27:00", "tempoResidual": "1d,7h", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636651758, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO- GUILHERME CASTRO DO CARMO", "endereco": "RUA SAO JOAO BATISTA", "numero": 324, "complemento": "", "bairro": "CAMBUCI", "municipio": "SÃO PAULO", "setor": 33, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 08:31:00", "dataCompetencia": "2026-09-10 20:02:00", "prazoExecucao": "2026-09-12 20:02:00", "tempoResidual": "1d,10h,35m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636653416, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA DONA ANA NERI", "numero": 21, "complemento": "", "bairro": "MOOCA", "municipio": "SÃO PAULO", "setor": 28, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 08:38:00", "dataCompetencia": "2026-09-10 22:04:00", "prazoExecucao": "2026-09-12 22:04:00", "tempoResidual": "1d,12h,37m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636653331, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA SERGIO TOMAS", "numero": 240, "complemento": "", "bairro": "BARRA FUNDA", "municipio": "SÃO PAULO", "setor": 19, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 08:38:00", "dataCompetencia": "2026-09-10 21:50:00", "prazoExecucao": "2026-09-12 21:50:00", "tempoResidual": "1d,12h,23m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636653015, "regiao": "IPIRANGA", "unidade": "OCMI - DIV MANUT SERV OPER IPIRANGA", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MARCOS REIS DOS SANTOS", "endereco": "RUA CONSELHEIRO NEBIAS", "numero": 129, "complemento": "", "bairro": "CAMPOS ELISEOS", "municipio": "SÃO PAULO", "setor": 8, "atc": "915 - ATC IPIRANGA", "dataInsercao": "2026-09-11 08:38:00", "dataCompetencia": "2026-09-10 21:11:00", "prazoExecucao": "2026-09-12 21:11:00", "tempoResidual": "1d,11h,44m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511583, "regiao": "JARDINS", "unidade": "OCMJ - DIV MANUT SERV OPER JARDINS", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - REBECA LOPES (BAIXA INTERNA)", "endereco": "RUA PAIM", "numero": 106, "complemento": "C/2", "bairro": "BELA VISTA", "municipio": "SÃO PAULO", "setor": 10, "atc": "917 - ATC JARDINS", "dataInsercao": "2026-09-10 14:28:00", "dataCompetencia": "2026-09-10 14:18:00", "prazoExecucao": "2026-09-12 14:18:00", "tempoResidual": "1d,4h,51m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636053598, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Planejável", "equipe": NaN, "endereco": "RUA SAO MIGUEL ARCANJO", "numero": 63, "complemento": "", "bairro": "QUINTA DA PAINEIRA", "municipio": "SÃO PAULO", "setor": 44, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-08 10:19:00", "dataCompetencia": "2026-09-08 10:10:00", "prazoExecucao": "2026-09-10 10:10:00", "tempoResidual": "-23h,15m", "causa": "", "contrato": NaN}, {"os": 2636106375, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "RUA BOM SUCESSO", "numero": 1346, "complemento": "", "bairro": "CID MAE CEU", "municipio": "SÃO PAULO", "setor": 30, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-08 14:10:00", "dataCompetencia": "2026-09-08 14:10:00", "prazoExecucao": "2026-09-10 14:10:00", "tempoResidual": "-19h,16m", "causa": "MORADOR AUSENTE", "contrato": "9999999999 - SABESP"}, {"os": 2636371189, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "RUA BARAO DO SERRO LARGO", "numero": 527, "complemento": "", "bairro": "AGUA RASA", "municipio": "SÃO PAULO", "setor": 54, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-09 15:29:00", "dataCompetencia": "2026-09-09 14:30:00", "prazoExecucao": "2026-09-11 14:30:00", "tempoResidual": "5h,3m", "causa": "RUA INTERDITADA/FEIRA/EVENTO", "contrato": "9999999999 - SABESP"}, {"os": 2636398517, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR AGUA DEB COM SERVIÇO ADICIONAL", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "AVENIDA ARICANDUVA", "numero": 800, "complemento": "C/1", "bairro": "S MATEUS", "municipio": "SÃO PAULO", "setor": 55, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-10 10:16:00", "dataCompetencia": "2026-09-09 20:14:00", "prazoExecucao": "2026-09-11 20:14:00", "tempoResidual": "10h,47m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636508897, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "RUA HERWIS", "numero": 148, "complemento": "C/2", "bairro": "V EMA", "municipio": "SÃO PAULO", "setor": 117, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-10 14:02:00", "dataCompetencia": "2026-09-10 14:01:00", "prazoExecucao": "2026-09-12 14:01:00", "tempoResidual": "1d,4h,35m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636510051, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR ÁGUA DEB OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "RUA MANDERA", "numero": 61, "complemento": "", "bairro": "V ALPINA", "municipio": "SÃO PAULO", "setor": 51, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-10 14:10:00", "dataCompetencia": "2026-09-10 14:09:00", "prazoExecucao": "2026-09-12 14:09:00", "tempoResidual": "1d,4h,43m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 26103944866, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR AGUA IMPEDIMENTO DE LEITURA", "status": "Despachada", "equipe": "WENGRY FONSECA MATOS-CAVALETE", "endereco": "RUA PROFESSOR WALTER WEY", "numero": 332, "complemento": "C/5", "bairro": "V NOVA UTINGA", "municipio": "SÃO PAULO", "setor": 118, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-10 14:16:00", "dataCompetencia": "2026-09-10 14:15:00", "prazoExecucao": "2026-09-12 14:15:00", "tempoResidual": "1d,4h,48m", "causa": "", "contrato": "4600059968 - EMPRESA CONSÓRCIO MANUTENÇÃO NOVA CENTRO II/04048-000 SÃO PAULO"}, {"os": 2636498522, "regiao": "MOOCA", "unidade": "OCMM - DIV MANUT SERV OPER MOOCA", "servico": "RELIGAR AGUA DEB COM SERVIÇO ADICIONAL", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - ISRAEL MORAIS DA SILVA", "endereco": "AVENIDA PAES DE BARROS", "numero": 1889, "complemento": "", "bairro": "MOOCA", "municipio": "SÃO PAULO", "setor": 32, "atc": "919 - ATC MOOCA", "dataInsercao": "2026-09-10 15:29:00", "dataCompetencia": "2026-09-10 12:19:00", "prazoExecucao": "2026-09-12 12:19:00", "tempoResidual": "1d,2h,52m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636490852, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RELIGAR ÁGUA DEB OP", "status": "Planejada", "equipe": "PRIMARIZAÇÃO - MAYCO MELO MARTINS", "endereco": "AVENIDA RIO DAS PEDRAS", "numero": 3515, "complemento": "", "bairro": "JD ITAMARATI", "municipio": "SÃO PAULO", "setor": 149, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 11:31:00", "dataCompetencia": "2026-09-10 11:30:00", "prazoExecucao": "2026-09-12 11:30:00", "tempoResidual": "1d,2h,3m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636510212, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Planejada", "equipe": "PRIMARIZAÇÃO - MAYCO MELO MARTINS", "endereco": "RUA CAPIM BRANCO", "numero": 22, "complemento": "", "bairro": "JD IMPERADOR", "municipio": "SÃO PAULO", "setor": 149, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:12:00", "dataCompetencia": "2026-09-10 14:11:00", "prazoExecucao": "2026-09-12 14:11:00", "tempoResidual": "1d,4h,43m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636498574, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - SAMUEL RODRIGUES", "endereco": "RUA ILHA DA QUEIMADA", "numero": 17, "complemento": "A", "bairro": "PQ BOA ESPERANCA", "municipio": "SÃO PAULO", "setor": 194, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 12:19:00", "dataCompetencia": "2026-09-10 12:19:00", "prazoExecucao": "2026-09-12 12:19:00", "tempoResidual": "1d,2h,52m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636499376, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - SAMUEL RODRIGUES", "endereco": "RUA ALESSANDRO MELANI", "numero": 17, "complemento": "A", "bairro": "JD S JOAO", "municipio": "SÃO PAULO", "setor": 194, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 12:27:00", "dataCompetencia": "2026-09-10 12:27:00", "prazoExecucao": "2026-09-12 12:27:00", "tempoResidual": "1d,3h", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636508983, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - DEIVISON PEREIRA DE ARAUJO COELHO", "endereco": "RUA JOAO VELHO DO REGO", "numero": 1032, "complemento": "", "bairro": "JD COLONIAL", "municipio": "SÃO PAULO", "setor": 150, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:03:00", "dataCompetencia": "2026-09-10 14:02:00", "prazoExecucao": "2026-09-12 14:02:00", "tempoResidual": "1d,4h,34m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636510387, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - DEIVISON PEREIRA DE ARAUJO COELHO", "endereco": "RUA LUIS ROSSETI", "numero": 619, "complemento": "", "bairro": "S MATEUS", "municipio": "SÃO PAULO", "setor": 150, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:12:00", "dataCompetencia": "2026-09-10 14:12:00", "prazoExecucao": "2026-09-12 14:12:00", "tempoResidual": "1d,4h,44m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511385, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - DEIVISON PEREIRA DE ARAUJO COELHO", "endereco": "RUA LUIS PITTA", "numero": 130, "complemento": "", "bairro": "S MATEUS", "municipio": "SÃO PAULO", "setor": 150, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:25:00", "dataCompetencia": "2026-09-10 14:18:00", "prazoExecucao": "2026-09-12 14:18:00", "tempoResidual": "1d,4h,50m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636511187, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MATHEUS OVIDIO DOS SANTOS DA CRUZ", "endereco": "RUA NOVA BRASILIA", "numero": 915, "complemento": "", "bairro": "JD DONA SINHA", "municipio": "SÃO PAULO", "setor": 155, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:22:00", "dataCompetencia": "2026-09-10 14:17:00", "prazoExecucao": "2026-09-12 14:17:00", "tempoResidual": "1d,4h,49m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636512785, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - WANDERSON AMORIM DOS SANTOS FERREIRA", "endereco": "RUA JOSE ANTONIO FONTES", "numero": 1106, "complemento": "", "bairro": "V TOLSTOI", "municipio": "SÃO PAULO", "setor": 118, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:33:00", "dataCompetencia": "2026-09-10 14:26:00", "prazoExecucao": "2026-09-12 14:26:00", "tempoResidual": "1d,4h,59m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636513305, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - DEIVISON PEREIRA DE ARAUJO COELHO", "endereco": "RUA DOUTOR PAULO QUEIROZ", "numero": 889, "complemento": "", "bairro": "JD NOVE DE JULHO", "municipio": "SÃO PAULO", "setor": 150, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:34:00", "dataCompetencia": "2026-09-10 14:31:00", "prazoExecucao": "2026-09-12 14:31:00", "tempoResidual": "1d,5h,3m", "causa": "IMÓVEL FECHADO, REPROGRAMAR ORDEM", "contrato": "9999999999 - SABESP"}, {"os": 2636512787, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - WANDERSON AMORIM DOS SANTOS FERREIRA", "endereco": "RUA FERNANDO WEYNE", "numero": 177, "complemento": "", "bairro": "V MIAMI", "municipio": "SÃO PAULO", "setor": 118, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 14:34:00", "dataCompetencia": "2026-09-10 14:26:00", "prazoExecucao": "2026-09-12 14:26:00", "tempoResidual": "1d,4h,59m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636543665, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - RENATO ARAUJO DE ALMEIDA", "endereco": "RUA ALBERTO LAZARI", "numero": 11, "complemento": "C/1", "bairro": "JD ADUTORA", "municipio": "SÃO PAULO", "setor": 153, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 17:42:00", "dataCompetencia": "2026-09-10 15:47:00", "prazoExecucao": "2026-09-12 15:47:00", "tempoResidual": "1d,6h,19m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 26103974261, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RELIGAR AGUA IMPEDIMENTO DE LEITURA", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MATHEUS OVIDIO DOS SANTOS DA CRUZ", "endereco": "RUA VERATRO", "numero": 161, "complemento": "C/2", "bairro": "JD PANORAMA", "municipio": "SÃO PAULO", "setor": 156, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-10 17:58:00", "dataCompetencia": "2026-09-10 17:57:00", "prazoExecucao": "2026-09-12 17:57:00", "tempoResidual": "1d,8h,30m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636651667, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MATHEUS OVIDIO DOS SANTOS DA CRUZ", "endereco": "RUA JOSE FREIRE", "numero": 17, "complemento": "", "bairro": "V TOLSTOI", "municipio": "SÃO PAULO", "setor": 155, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-11 08:26:00", "dataCompetencia": "2026-09-10 20:00:00", "prazoExecucao": "2026-09-12 20:00:00", "tempoResidual": "1d,10h,33m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636651673, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - MATHEUS OVIDIO DOS SANTOS DA CRUZ", "endereco": "RUA PEDRO GONCALVES VAREJAO", "numero": 240, "complemento": "", "bairro": "JD MIMAR", "municipio": "SÃO PAULO", "setor": 155, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-11 08:27:00", "dataCompetencia": "2026-09-10 20:01:00", "prazoExecucao": "2026-09-12 20:01:00", "tempoResidual": "1d,10h,33m", "causa": "", "contrato": "9999999999 - SABESP"}, {"os": 2636653913, "regiao": "SÃO MATEUS", "unidade": "OCMS - DIV MANUT SERV OPER SÃO MATEUS", "servico": "RESTABELECER LIGAÇÃO OP", "status": "Despachada", "equipe": "PRIMARIZAÇÃO - DEIVISON PEREIRA DE ARAUJO COELHO", "endereco": "RUA PERO LOPES LOBO", "numero": 501, "complemento": "", "bairro": "S MATEUS", "municipio": "SÃO PAULO", "setor": 150, "atc": "947 - ATC SAO MATEUS", "dataInsercao": "2026-09-11 08:39:00", "dataCompetencia": "2026-09-11 02:47:00", "prazoExecucao": "2026-09-13 02:47:00", "tempoResidual": "1d,17h,20m", "causa": "", "contrato": "9999999999 - SABESP"}];
@@ -718,6 +999,98 @@ let USERS = loadUsers();
 let currentRole = 'viewer';
 try{ currentRole = localStorage.getItem('primarizacao-role') || 'viewer'; }catch(err){}
 
+let excludedServiceTerms = [];
+try{ excludedServiceTerms = JSON.parse(localStorage.getItem('primarizacao-excluded-services') || '[]'); }catch(err){ excludedServiceTerms = []; }
+function saveExcludedServiceTerms(){
+  try{ localStorage.setItem('primarizacao-excluded-services', JSON.stringify(excludedServiceTerms)); }catch(err){}
+}
+function isServiceExcluded(servico){
+  const norm = normaliseText(servico);
+  return excludedServiceTerms.some(term => norm.includes(normaliseText(term)));
+}
+function applyServiceExclusions(rows){
+  return rows.filter(r => !isServiceExcluded(r.servico));
+}
+let serviceExclusionsDirty = false;
+function markServiceExclusionsDirty(){
+  serviceExclusionsDirty = true;
+  const btn = document.getElementById('btnSaveServiceExclusions');
+  const status = document.getElementById('serviceSaveStatus');
+  if(btn) btn.disabled = false;
+  if(status){ status.textContent = 'Alterações não salvas'; status.className = 'save-status dirty'; }
+}
+
+/* ---------------- excluded teams (equipes) ---------------- */
+let excludedTeams = [];
+try{ excludedTeams = JSON.parse(localStorage.getItem('primarizacao-excluded-teams') || '[]'); }catch(err){ excludedTeams = []; }
+function saveExcludedTeams(){
+  try{ localStorage.setItem('primarizacao-excluded-teams', JSON.stringify(excludedTeams)); }catch(err){}
+}
+function isTeamExcluded(equipe){
+  return excludedTeams.some(t => normaliseText(t) === normaliseText(equipe));
+}
+function applyTeamExclusions(rows){
+  return rows.filter(r => !isTeamExcluded(r.equipe));
+}
+let teamExclusionsDirty = false;
+function markTeamExclusionsDirty(){
+  teamExclusionsDirty = true;
+  const btn = document.getElementById('btnSaveTeams');
+  const status = document.getElementById('teamSaveStatus');
+  if(btn) btn.disabled = false;
+  if(status){ status.textContent = 'Alterações não salvas'; status.className = 'save-status dirty'; }
+}
+function applyAllExclusions(rows){
+  return applyTeamExclusions(applyServiceExclusions(rows));
+}
+
+/* ---------------- cadastro de equipes (equipes próprias) ---------------- */
+function loadTeamRegistry(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('primarizacao-team-registry') || '[]');
+    if(Array.isArray(saved)) return saved;
+  }catch(err){}
+  return [];
+}
+let TEAM_REGISTRY = loadTeamRegistry();
+function saveTeamRegistry(){
+  try{ localStorage.setItem('primarizacao-team-registry', JSON.stringify(TEAM_REGISTRY)); }catch(err){}
+}
+function findRegisteredTeam(equipeName){
+  const norm = normaliseText(equipeName);
+  return TEAM_REGISTRY.find(t => normaliseText(t.nome) === norm) || null;
+}
+function isOwnTeam(equipeName){
+  const reg = findRegisteredTeam(equipeName);
+  return !!(reg && reg.status !== 'inativa');
+}
+function upsertTeamRegistry(team){
+  const idx = TEAM_REGISTRY.findIndex(t => normaliseText(t.nome) === normaliseText(team.originalNome || team.nome));
+  const record = {
+    nome: team.nome, integrantes: team.integrantes, status: team.status,
+    observacoes: team.observacoes, dataCadastro: team.dataCadastro || new Date().toISOString()
+  };
+  if(idx >= 0) TEAM_REGISTRY[idx] = record; else TEAM_REGISTRY.push(record);
+  saveTeamRegistry();
+}
+function removeTeamRegistry(nome){
+  TEAM_REGISTRY = TEAM_REGISTRY.filter(t => normaliseText(t.nome) !== normaliseText(nome));
+  saveTeamRegistry();
+}
+
+/* ---------------- filtro especial de Primarização ---------------- */
+const PRIMARIZATION_SERVICE_TERMS = [
+  'RELIGAR AGUA DEB OP', 'RELIGAR AGUA DEB DIF',
+  'RESTABELECER LIGACAO OP', 'RESTABELECER LIGACAO DIF',
+  'RELIGAR AGUA DEB URGENCIA OP', 'RELIGAR AGUA DEB URGENCIA S/CUSTO OP',
+  'RESTABELECER LIGACAO URGENCIA OP', 'RESTABELECER LIGACAO URGENCIA S/CUSTO OP',
+];
+let primarizationFilterActive = false;
+function isPrimarizationService(servico){
+  const norm = normaliseText(servico);
+  return PRIMARIZATION_SERVICE_TERMS.some(term => norm === normaliseText(term) || norm.startsWith(normaliseText(term)));
+}
+
 /* ---------------- helpers ---------------- */
 function parseResidual(tr, prazo){
   const prazoDate = parseDateTime(prazo);
@@ -748,6 +1121,47 @@ function fmtDate(s){
   const d = new Date(s.replace(' ','T'));
   if(isNaN(d)) return s;
   return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function fmtDateFull(s){
+  if(!s) return '—';
+  const d = new Date(s.replace(' ','T'));
+  if(isNaN(d)) return s;
+  return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+/* Converte um total de horas (pode ser negativo) em texto "1d,4h,50m" */
+function formatDuration(totalHours){
+  const late = totalHours < 0;
+  let mins = Math.round(Math.abs(totalHours) * 60);
+  const days = Math.floor(mins / 1440); mins -= days*1440;
+  const hours = Math.floor(mins / 60); mins -= hours*60;
+  const parts = [];
+  if(days) parts.push(days+'d');
+  if(hours || days) parts.push(hours+'h');
+  parts.push(mins+'m');
+  return {text: parts.join(', '), late};
+}
+/* Retorna o tempo restante (ou atraso) até o prazo, calculado com o relógio atual do computador */
+function computeRemaining(prazo){
+  const d = parseDateTime(prazo);
+  if(!d) return null;
+  const hours = (d.getTime() - Date.now()) / 3600000;
+  const {text, late} = formatDuration(hours);
+  let cls = 'ok';
+  if(late) cls = 'bad';
+  else if(hours < 24) cls = 'warn';
+  return {
+    label: late ? `Atrasado há ${text}` : `Faltam ${text}`,
+    cls
+  };
+}
+/* Célula clicável da coluna Prazo: mostra a data e o tempo restante, calculado com o relógio do computador */
+function prazoCellHtml(r){
+  const remain = computeRemaining(r.prazoExecucao);
+  const dateText = r.prazoExecucao ? fmtDate(r.prazoExecucao) : '—';
+  const remainHtml = remain
+    ? `<span class="prazo-remain ${remain.cls}">${remain.label}</span>`
+    : (r.tempoResidual ? `<span class="prazo-remain">${escapeHtml(r.tempoResidual)}</span>` : '<span class="prazo-remain">Sem prazo definido</span>');
+  return `<td class="mono"><div class="prazo-cell" data-prazo-os="${r.os}"><span class="prazo-date">${dateText}</span>${remainHtml}</div></td>`;
 }
 function statusBadgeClass(status){
   if(status === 'Despachada') return 'badge-dispatched';
@@ -783,21 +1197,61 @@ function downloadCSV(rows, filename){
 }
 
 /* enrich data */
-let DATA = RAW_DATA.map(r => {
-  const clean = {
-    ...r,
-    equipe: typeof r.equipe === 'string' && r.equipe.trim() ? r.equipe : 'Sem equipe',
-    contrato: typeof r.contrato === 'string' ? r.contrato : '',
-    complemento: typeof r.complemento === 'string' ? r.complemento : '',
-    causa: typeof r.causa === 'string' ? r.causa : ''
-  };
-  const p = parseResidual(clean.tempoResidual, clean.prazoExecucao);
-  return {...clean, situacao: p.cat};
-});
+function enrichRawData(raw){
+  return raw.map(r => {
+    const clean = {
+      ...r,
+      equipe: typeof r.equipe === 'string' && r.equipe.trim() ? r.equipe : 'Sem equipe',
+      contrato: typeof r.contrato === 'string' ? r.contrato : '',
+      complemento: typeof r.complemento === 'string' ? r.complemento : '',
+      causa: typeof r.causa === 'string' ? r.causa : ''
+    };
+    const p = parseResidual(clean.tempoResidual, clean.prazoExecucao);
+    return {...clean, situacao: p.cat};
+  });
+}
+function recomputeSituacao(rows){
+  return rows.map(r => ({...r, situacao: parseResidual(r.tempoResidual, r.prazoExecucao).cat}));
+}
 
-/* last update */
-const maxDate = DATA.reduce((m,r) => r.dataInsercao > m ? r.dataInsercao : m, '0000');
-document.getElementById('footUpdate').textContent = fmtDate(maxDate);
+/* ---------------- persistência local dos dados importados ----------------
+   Como o painel fica hospedado como página estática (ex.: GitHub Pages),
+   não há um servidor/banco por trás. Os dados importados (e o cadastro de
+   equipes, abaixo) ficam salvos no localStorage do navegador, então
+   continuam disponíveis mesmo depois de fechar e reabrir o navegador.
+   Para persistência entre diferentes computadores/pessoas, o próximo passo
+   recomendado é ligar este mesmo fluxo a um backend como Supabase ou
+   Firebase, substituindo as chamadas a localStorage abaixo. */
+function loadPersistedData(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('primarizacao-data-full') || 'null');
+    if(Array.isArray(saved) && saved.length) return saved;
+  }catch(err){}
+  return null;
+}
+function savePersistedData(rows){
+  try{ localStorage.setItem('primarizacao-data-full', JSON.stringify(rows)); }catch(err){}
+}
+let importMeta = {fileName:'', importedAt:''};
+try{ importMeta = JSON.parse(localStorage.getItem('primarizacao-import-meta') || 'null') || importMeta; }catch(err){}
+function saveImportMeta(){
+  try{ localStorage.setItem('primarizacao-import-meta', JSON.stringify(importMeta)); }catch(err){}
+}
+
+const persistedRows = loadPersistedData();
+let DATA_FULL = recomputeSituacao(persistedRows || enrichRawData(RAW_DATA));
+if(persistedRows){
+  ALL_REGIONS = [...new Set(DATA_FULL.map(r=>r.regiao).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+let DATA = applyAllExclusions(DATA_FULL);
+
+/* last update — sincronizado com o relógio do computador, não com a data estática da planilha */
+function updateFootClock(){
+  const el = document.getElementById('footUpdate');
+  if(el) el.textContent = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+updateFootClock();
+setInterval(updateFootClock, 30000);
 
 /* ---------------- state ---------------- */
 let currentRegion = null; // null = todas
@@ -896,7 +1350,7 @@ function renderMiniKpis(){
 }
 
 function refreshDashboard(){
-  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications];
+  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico];
   steps.forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao renderizar', step.name, err); }
   });
@@ -960,6 +1414,105 @@ function drawDonut(segs, total){
     <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="10" fill="#8A93A3">ordens</text>`;
 }
 
+/* ---------------- histórico (consolidado de tudo importado) ---------------- */
+let histPeriod = 'day';
+function periodKeyFor(dateStr, period){
+  const d = parseDateTime(dateStr);
+  if(!d) return null;
+  if(period === 'month') return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(period === 'week'){
+    const day = (d.getDay()+6)%7;
+    const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate()-day);
+    return `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+  }
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function periodLabel(key, period){
+  if(period === 'month'){ const [y,m] = key.split('-'); return `${m}/${y.slice(2)}`; }
+  const d = new Date(key+'T00:00:00');
+  if(isNaN(d)) return key;
+  return (period === 'week' ? 'sem ' : '') + d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+function groupByPeriod(rows, period){
+  const map = {};
+  rows.forEach(r => {
+    const key = periodKeyFor(r.dataInsercao, period);
+    if(!key) return;
+    if(!map[key]) map[key] = {total:0, atraso:0};
+    map[key].total++;
+    if(r.situacao === 'atraso') map[key].atraso++;
+  });
+  return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);
+}
+function renderHistProdChart(grouped){
+  const max = Math.max(1, ...grouped.map(([,v])=>v.total));
+  document.getElementById('histProdChart').innerHTML = grouped.map(([key,v]) => `
+    <div class="chart-bar-col">
+      <div class="chart-bar-val">${v.total}</div>
+      <div class="chart-bar" style="height:${Math.max(4,(v.total/max)*140)}px"></div>
+      <div class="chart-bar-label">${periodLabel(key,histPeriod)}</div>
+    </div>`).join('') || '<div class="empty-state">Sem dados suficientes.</div>';
+}
+function renderHistLateChart(grouped){
+  const max = Math.max(1, ...grouped.map(([,v])=>v.atraso));
+  document.getElementById('histLateChart').innerHTML = grouped.map(([key,v]) => `
+    <div class="chart-bar-col">
+      <div class="chart-bar-val">${v.atraso}</div>
+      <div class="chart-bar late" style="height:${Math.max(4,(v.atraso/max)*140)}px"></div>
+      <div class="chart-bar-label">${periodLabel(key,histPeriod)}</div>
+    </div>`).join('') || '<div class="empty-state">Nenhum atraso registrado no período. 🎉</div>';
+}
+function renderHistCharts(){
+  const grouped = groupByPeriod(DATA_FULL, histPeriod);
+  renderHistProdChart(grouped);
+  renderHistLateChart(grouped);
+  let trendHtml = '<div class="sla-trend" style="color:var(--gray-500)">Dados insuficientes para tendência</div>';
+  if(grouped.length >= 2){
+    const half = Math.ceil(grouped.length/2);
+    const first = grouped.slice(0, half), second = grouped.slice(half);
+    const slaOf = arr => { const total = arr.reduce((s,[,v])=>s+v.total,0); const atraso = arr.reduce((s,[,v])=>s+v.atraso,0); return total ? ((total-atraso)/total)*100 : 100; };
+    const diff = slaOf(second) - slaOf(first);
+    const up = diff >= 0;
+    trendHtml = `<div class="sla-trend" style="color:${up?'var(--green)':'var(--red)'}">${up?'▲':'▼'} SLA ${up?'melhorou':'piorou'} ${Math.abs(diff).toFixed(1)}pp no período mais recente</div>`;
+  }
+  const summaryEl = document.getElementById('histLateSummary');
+  if(summaryEl) summaryEl.innerHTML = `<div class="mini-kpi"><div class="mini-kpi-label">EVOLUÇÃO DO SLA</div>${trendHtml}</div>`;
+}
+function renderHistorico(){
+  const rows = DATA_FULL;
+  const k = computeKpis(rows);
+  const religacoes = rows.filter(r => normaliseText(r.servico).includes('religar')).length;
+  const restabelecimentos = rows.filter(r => normaliseText(r.servico).includes('restabelec')).length;
+  const sla = k.total ? (((k.total - k.atraso) / k.total) * 100).toFixed(1) : '—';
+  const days = new Set(rows.map(r=>periodKeyFor(r.dataInsercao,'day')).filter(Boolean));
+  const weeks = new Set(rows.map(r=>periodKeyFor(r.dataInsercao,'week')).filter(Boolean));
+  const months = new Set(rows.map(r=>periodKeyFor(r.dataInsercao,'month')).filter(Boolean));
+  const mediaDia = days.size ? (k.total/days.size).toFixed(1) : '0';
+  const mediaSemana = weeks.size ? (k.total/weeks.size).toFixed(1) : '0';
+  const mediaMes = months.size ? (k.total/months.size).toFixed(1) : '0';
+  const items = [
+    {label:'Total executado', num:k.total},
+    {label:'Religações', num:religacoes},
+    {label:'Restabelecimentos', num:restabelecimentos},
+    {label:'Em atraso', num:k.atraso, cls:k.atraso?'bad':''},
+    {label:'SLA geral', num:`${sla}${sla!=='—'?'%':''}`},
+    {label:'Médias (dia/sem/mês)', num:`${mediaDia} · ${mediaSemana} · ${mediaMes}`},
+  ];
+  document.getElementById('histKpiRow').innerHTML = items.map(it => `
+    <div class="kpi ${it.cls||''}">
+      <div class="kpi-top"><div class="kpi-num">${it.num}</div></div>
+      <div class="kpi-label">${it.label}</div>
+    </div>`).join('');
+  renderHistCharts();
+}
+document.getElementById('histPeriodToggle').addEventListener('click', event => {
+  const btn = event.target.closest('button[data-period]');
+  if(!btn) return;
+  histPeriod = btn.dataset.period;
+  document.querySelectorAll('#histPeriodToggle button').forEach(b => b.classList.toggle('active', b===btn));
+  renderHistCharts();
+});
+
 /* ---------------- ORDENS table ---------------- */
 const COLUMNS = [
   {key:'os', label:'OS'},
@@ -973,7 +1526,7 @@ const COLUMNS = [
 ];
 let sortKey = 'dataInsercao';
 let sortDir = 'desc';
-let tableFilters = {regiao:'', status:'', situacao:'', q:''};
+let tableFilters = {regiao:'', status:'', situacao:'', servico:'', q:''};
 
 function initTableFilters(){
   const regSel = document.getElementById('filterRegiao');
@@ -990,8 +1543,30 @@ function initTableFilters(){
     opt.value = s; opt.textContent = s;
     statusSel.appendChild(opt);
   });
+  const servicoSel = document.getElementById('filterServico');
+  servicoSel.innerHTML = '<option value="">Todos os serviços</option>';
+  [...new Set(DATA.map(r=>r.servico).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    servicoSel.appendChild(opt);
+  });
+  const excludeSel = document.getElementById('excludeServiceSelect');
+  if(excludeSel){
+    const currentPick = excludeSel.value;
+    excludeSel.innerHTML = '<option value="">Selecione um serviço para excluir...</option>';
+    [...new Set(DATA_FULL.map(r=>r.servico).filter(Boolean))]
+      .filter(s => !isServiceExcluded(s))
+      .sort((a,b)=>a.localeCompare(b,'pt-BR'))
+      .forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        excludeSel.appendChild(opt);
+      });
+    if([...excludeSel.options].some(o=>o.value===currentPick)) excludeSel.value = currentPick;
+  }
   regSel.onchange = e => { tableFilters.regiao = e.target.value; renderTable(); };
   statusSel.onchange = e => { tableFilters.status = e.target.value; renderTable(); };
+  servicoSel.onchange = e => { tableFilters.servico = e.target.value; renderTable(); };
   document.getElementById('filterSituacao').onchange = e => { tableFilters.situacao = e.target.value; renderTable(); };
   document.getElementById('tableSearch').oninput = debounce(e => { tableFilters.q = e.target.value.toLowerCase(); renderTable(); }, 180);
   document.getElementById('globalSearch').oninput = debounce(e => {
@@ -1015,7 +1590,7 @@ function valueByAliases(row, aliases){
 }
 function formatImportedDate(value){
   const pad = n => String(n).padStart(2,'0');
-  if(value instanceof Date && !isNaN(value)) return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())} ${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`;
+  if(value instanceof Date && !isNaN(value)) return `${value.getUTCFullYear()}-${pad(value.getUTCMonth()+1)}-${pad(value.getUTCDate())} ${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(value.getUTCSeconds())}`;
   if(typeof value === 'number' && isFinite(value)){
     const date = new Date(Date.UTC(1899,11,30) + value*86400000);
     return `${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
@@ -1062,19 +1637,77 @@ function inferRegion(value){
   if(text.includes('SANTO ANDRE')) return 'SANTO ANDRÉ';
   return 'NÃO INFORMADA';
 }
+function dedupeRawRows(rows){
+  const seen = new Map();
+  const noKey = [];
+  rows.forEach(row => {
+    const key = String(valueByAliases(row,['os','numeroos','ordemservico','numerodaos']) || '').trim();
+    if(!key){ noKey.push(row); return; }
+    if(!seen.has(key)) seen.set(key, row);
+  });
+  return [...seen.values(), ...noKey];
+}
 function updateImportedData(rows, fileName){
   if(!rows.length) throw new Error('A planilha não possui linhas válidas.');
-  DATA = mapImportedRows(rows);
+  rows = dedupeRawRows(rows);
+  DATA_FULL = mapImportedRows(rows);
+  DATA = applyAllExclusions(DATA_FULL);
   ALL_REGIONS = [...new Set(DATA.map(r=>r.regiao).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   currentRegion = null;
-  tableFilters = {regiao:'', status:'', situacao:'', q:''};
+  tableFilters = {regiao:'', status:'', situacao:'', servico:'', q:''};
   document.getElementById('tableSearch').value = '';
   document.getElementById('globalSearch').value = '';
   initTableFilters();
-  const maxDate = DATA.reduce((m,r) => r.dataInsercao > m ? r.dataInsercao : m, '0000');
-  document.getElementById('footUpdate').textContent = fmtDate(maxDate);
+  updateFootClock();
+  renderExcludedChips();
+  renderExcludedTeamsChips();
+  savePersistedData(DATA_FULL);
+  importMeta = {fileName, importedAt: new Date().toISOString()};
+  saveImportMeta();
   refreshDashboard();
-  document.getElementById('importMessage').textContent = `${DATA.length} ordens importadas de ${fileName}.`;
+  document.getElementById('importMessage').textContent = `${DATA.length} ordens importadas de ${fileName}${DATA_FULL.length !== DATA.length ? ` (${DATA_FULL.length - DATA.length} ocultas por exclusões ativas)` : ''}.`;
+}
+function reapplyServiceExclusions(){
+  DATA = applyAllExclusions(DATA_FULL);
+  ALL_REGIONS = [...new Set(DATA.map(r=>r.regiao).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  initTableFilters();
+  refreshDashboard();
+}
+function reapplyTeamExclusions(){ reapplyServiceExclusions(); }
+function renderExcludedChips(){
+  const wrap = document.getElementById('excludedChips');
+  if(!wrap) return;
+  wrap.innerHTML = excludedServiceTerms.map(term => `
+    <span class="exclude-chip">
+      ${escapeHtml(term)}
+      <button type="button" class="exclude-chip-remove" data-term="${escapeHtml(term)}" title="Voltar a mostrar">&times;</button>
+    </span>`).join('') || '<span class="exclude-empty">Nenhum serviço excluído.</span>';
+  wrap.querySelectorAll('.exclude-chip-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      excludedServiceTerms = excludedServiceTerms.filter(t => t !== btn.dataset.term);
+      markServiceExclusionsDirty();
+      renderExcludedChips();
+      reapplyServiceExclusions();
+    });
+  });
+}
+function renderExcludedTeamsChips(){
+  const wrap = document.getElementById('excludedTeamsChips');
+  if(!wrap) return;
+  wrap.innerHTML = excludedTeams.map(name => `
+    <span class="team-restore-chip">
+      ${escapeHtml(titleCase(name.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}
+      <button type="button" class="team-restore-remove" data-team="${escapeHtml(name)}" title="Restaurar equipe">&times;</button>
+    </span>`).join('') || '<span class="exclude-empty">Nenhuma equipe excluída.</span>';
+  wrap.querySelectorAll('.team-restore-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      excludedTeams = excludedTeams.filter(t => t !== btn.dataset.team);
+      markTeamExclusionsDirty();
+      renderExcludedTeamsChips();
+      reapplyTeamExclusions();
+      renderTeamsTable();
+    });
+  });
 }
 /* ---------------- lazy-load xlsx lib (só quando alguém for importar) ---------------- */
 let xlsxLoadPromise = null;
@@ -1091,34 +1724,45 @@ function loadXlsxLib(){
   return xlsxLoadPromise;
 }
 document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
-document.getElementById('fileImport').addEventListener('change', event => {
-  const file = event.target.files[0];
-  if(!file) return;
+function readOneFile(file){
   const isCsv = /\.csv$/i.test(file.name);
-  const proceed = () => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       try{
-        let rows;
         if(isCsv){
-          rows = parseCsv(reader.result);
+          resolve(parseCsv(reader.result));
         } else {
           const workbook = XLSX.read(reader.result,{type:'array',cellDates:true});
           const reportSheet = workbook.SheetNames.find(name => normaliseKey(name).includes('relatoriorestabrelig')) || workbook.SheetNames[0];
-          rows = XLSX.utils.sheet_to_json(workbook.Sheets[reportSheet], {defval:'',raw:true});
+          resolve(XLSX.utils.sheet_to_json(workbook.Sheets[reportSheet], {defval:'',raw:true}));
         }
-        updateImportedData(rows, file.name);
-      }catch(error){ document.getElementById('importMessage').textContent = `Não foi possível importar: ${error.message}`; }
-      event.target.value = '';
+      }catch(error){ reject(error); }
     };
+    reader.onerror = () => reject(new Error(`Falha ao ler o arquivo ${file.name}.`));
     if(isCsv) reader.readAsText(file,'utf-8'); else reader.readAsArrayBuffer(file);
+  });
+}
+document.getElementById('fileImport').addEventListener('change', event => {
+  const files = [...event.target.files];
+  if(!files.length) return;
+  const needsXlsx = files.some(f => !/\.csv$/i.test(f.name));
+  const proceed = () => {
+    document.getElementById('importMessage').textContent = 'Importando planilhas…';
+    Promise.all(files.map(readOneFile))
+      .then(rowsPerFile => {
+        const allRows = rowsPerFile.flat();
+        updateImportedData(allRows, files.length > 1 ? `${files.length} planilhas` : files[0].name);
+      })
+      .catch(error => { document.getElementById('importMessage').textContent = `Não foi possível importar: ${error.message}`; })
+      .finally(() => { event.target.value = ''; });
   };
-  if(isCsv){
-    proceed();
-  } else {
+  if(needsXlsx){
     document.getElementById('importMessage').textContent = 'Carregando leitor de planilhas…';
-    loadXlsxLib().then(() => { document.getElementById('importMessage').textContent = ''; proceed(); })
+    loadXlsxLib().then(proceed)
       .catch(err => { document.getElementById('importMessage').textContent = err.message; event.target.value = ''; });
+  } else {
+    proceed();
   }
 });
 
@@ -1159,8 +1803,10 @@ try {
 
 function filteredRows(){
   return DATA.filter(r => {
+    if(primarizationFilterActive && !isPrimarizationService(r.servico)) return false;
     if(tableFilters.regiao && normaliseText(r.regiao) !== normaliseText(tableFilters.regiao)) return false;
     if(tableFilters.status && normaliseText(r.status) !== normaliseText(tableFilters.status)) return false;
+    if(tableFilters.servico && normaliseText(r.servico) !== normaliseText(tableFilters.servico)) return false;
     if(tableFilters.situacao && r.situacao !== tableFilters.situacao) return false;
     if(tableFilters.q){
       const hay = `${r.os} ${r.endereco} ${r.bairro} ${r.equipe} ${r.servico} ${r.regiao}`.toLowerCase();
@@ -1171,8 +1817,8 @@ function filteredRows(){
 }
 function normaliseText(value){ return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase(); }
 function clearTableFilters(){
-  tableFilters = {regiao:'', status:'', situacao:'', q:''};
-  ['filterRegiao','filterStatus','filterSituacao','tableSearch','globalSearch'].forEach(id => { document.getElementById(id).value = ''; });
+  tableFilters = {regiao:'', status:'', situacao:'', servico:'', q:''};
+  ['filterRegiao','filterStatus','filterSituacao','filterServico','tableSearch','globalSearch'].forEach(id => { document.getElementById(id).value = ''; });
   sortKey = 'dataInsercao'; sortDir = 'desc';
   renderTable();
 }
@@ -1206,8 +1852,10 @@ function renderTable(){
   const tbody = document.getElementById('tableBody');
   document.getElementById('resultCount').textContent = `${rows.length} de ${DATA.length} ordens`;
   document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
-  tbody.innerHTML = rows.map(r => `
-    <tr data-os="${r.os}">
+  tbody.innerHTML = rows.map(r => {
+    const own = isOwnTeam(r.equipe);
+    return `
+    <tr data-os="${r.os}" class="${own?'own-team-row':''}">
       <td class="mono">${r.os}</td>
       <td>${escapeHtml(r.servico)}</td>
       <td>
@@ -1215,15 +1863,16 @@ function renderTable(){
         <div class="addr-sub">${escapeHtml(r.bairro)}</div>
       </td>
       <td>${titleCase(r.regiao)}</td>
-      <td>${escapeHtml(titleCase(r.equipe.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}</td>
+      <td>${escapeHtml(titleCase(r.equipe.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}${own?' <span class="badge badge-own-team">✅ Equipe Própria</span>':''}</td>
       <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
-      <td class="mono">${fmtDate(r.prazoExecucao)}</td>
+      ${prazoCellHtml(r)}
       <td>${situacaoBadge(r.situacao)}</td>
     </tr>
-  `).join('');
+  `;}).join('');
   tbody.querySelectorAll('tr').forEach(tr => {
     tr.addEventListener('click', () => openDrawer(parseInt(tr.dataset.os,10)));
   });
+  bindPrazoPopovers(tbody);
 }
 
 /* ---------------- equipes tab ---------------- */
@@ -1234,19 +1883,158 @@ function renderTeamsTable(){
     byTeam[r.equipe].rows.push(r);
     byTeam[r.equipe].regioes.add(r.regiao);
   });
+  // inclui equipes cadastradas mesmo sem OS na seleção atual
+  TEAM_REGISTRY.forEach(t => { if(!byTeam[t.nome]) byTeam[t.nome] = {rows:[], regioes:new Set()}; });
   const entries = Object.entries(byTeam).sort((a,b)=>b[1].rows.length-a[1].rows.length);
+  const isAdmin = currentRole === 'admin';
   document.getElementById('teamTableBody').innerHTML = entries.map(([name,info]) => {
     const k = computeKpis(info.rows);
     const shortName = titleCase(name.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim());
-    return `<tr>
-      <td><b>${escapeHtml(shortName)}</b></td>
-      <td>${[...info.regioes].map(titleCase).join(', ')}</td>
+    const reg = findRegisteredTeam(name);
+    const own = isOwnTeam(name);
+    return `<tr class="${own?'own-team-row':''}">
+      <td class="team-name-cell" data-team-detail="${escapeHtml(name)}"><b class="team-name-link">${escapeHtml(shortName)}</b>${own ? ' <span class="badge badge-own-team">✅ Equipe Própria</span>' : ''}</td>
+      <td>${[...info.regioes].map(titleCase).join(', ') || '—'}</td>
       <td class="mono">${k.total}</td>
       <td class="mono">${k.despachada}</td>
       <td>${k.atraso ? `<span class="badge badge-late">${k.atraso}</span>` : '0'}</td>
       <td>${k.h24 ? `<span class="badge badge-24h">${k.h24}</span>` : '0'}</td>
+      <td>${reg ? `<span class="badge ${reg.status==='inativa'?'team-status-inactive':'team-status-active'}">${reg.status==='inativa'?'Inativa':'Cadastrada'}</span>` : '<span class="save-status">Não cadastrada</span>'}</td>
+      <td style="text-align:right;white-space:nowrap;">${isAdmin ? `
+        <button class="btn" style="padding:5px 10px;font-size:12px;" data-edit-team="${escapeHtml(name)}" type="button">${reg?'Editar':'Cadastrar'}</button>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" data-exclude-team="${escapeHtml(name)}" type="button">Excluir</button>` : ''}</td>
     </tr>`;
   }).join('');
+  document.getElementById('teamTableBody').querySelectorAll('[data-team-detail]').forEach(cell => {
+    cell.addEventListener('click', () => openTeamDetail(cell.dataset.teamDetail));
+  });
+  document.getElementById('teamTableBody').querySelectorAll('[data-edit-team]').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      openTeamForm(btn.dataset.editTeam);
+    });
+  });
+  document.getElementById('teamTableBody').querySelectorAll('[data-exclude-team]').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      const name = btn.dataset.excludeTeam;
+      if(!confirm(`Excluir a equipe "${titleCase(name.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim())}" do painel? As OS dela ficarão ocultas até você restaurá-la.`)) return;
+      if(!excludedTeams.includes(name)) excludedTeams.push(name);
+      markTeamExclusionsDirty();
+      renderExcludedTeamsChips();
+      reapplyTeamExclusions();
+      renderTeamsTable();
+    });
+  });
+}
+
+/* ---------------- equipes: cadastro (modal) ---------------- */
+function openTeamForm(name){
+  document.getElementById('teamFormError').textContent = '';
+  const reg = name ? findRegisteredTeam(name) : null;
+  document.getElementById('teamFormOriginalName').value = name || '';
+  document.getElementById('teamFormTitle').textContent = reg ? 'Editar equipe' : 'Nova equipe';
+  document.getElementById('teamFormName').value = reg ? reg.nome : (name || '');
+  document.getElementById('teamFormMembers').value = reg ? (reg.integrantes || '') : '';
+  document.getElementById('teamFormStatus').value = reg ? (reg.status || 'ativa') : 'ativa';
+  document.getElementById('teamFormObs').value = reg ? (reg.observacoes || '') : '';
+  document.getElementById('teamFormOverlay').classList.add('show');
+}
+function closeTeamForm(){
+  document.getElementById('teamFormOverlay').classList.remove('show');
+}
+document.getElementById('btnNewTeam') && document.getElementById('btnNewTeam').addEventListener('click', () => openTeamForm(null));
+document.getElementById('btnCancelTeamForm').addEventListener('click', closeTeamForm);
+document.getElementById('teamFormOverlay').addEventListener('click', event => { if(event.target.id === 'teamFormOverlay') closeTeamForm(); });
+document.getElementById('btnSaveTeamForm').addEventListener('click', () => {
+  const originalNome = document.getElementById('teamFormOriginalName').value;
+  const nome = document.getElementById('teamFormName').value.trim();
+  const integrantes = document.getElementById('teamFormMembers').value.trim();
+  const status = document.getElementById('teamFormStatus').value;
+  const observacoes = document.getElementById('teamFormObs').value.trim();
+  const errEl = document.getElementById('teamFormError');
+  if(!nome){ errEl.textContent = 'Informe o nome da equipe.'; return; }
+  const existing = findRegisteredTeam(originalNome || nome);
+  upsertTeamRegistry({nome, integrantes, status, observacoes, originalNome, dataCadastro: existing ? existing.dataCadastro : new Date().toISOString()});
+  closeTeamForm();
+  renderTeamsTable();
+  renderTable();
+  renderRanking();
+});
+
+/* ---------------- equipes: modal de indicadores ---------------- */
+function openTeamDetail(name){
+  const reg = findRegisteredTeam(name);
+  const rows = DATA.filter(r => normaliseText(r.equipe) === normaliseText(name));
+  const k = computeKpis(rows);
+  const religacoes = rows.filter(r => normaliseText(r.servico).includes('religar')).length;
+  const restabelecimentos = rows.filter(r => normaliseText(r.servico).includes('restabelec')).length;
+  const sla = k.total ? (((k.total - k.atraso) / k.total) * 100).toFixed(1) : '—';
+  const regioes = [...new Set(rows.map(r=>r.regiao))].map(titleCase).join(', ') || '—';
+  const shortName = titleCase(name.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim());
+  document.getElementById('teamDetailTitle').textContent = shortName;
+  document.getElementById('teamDetailSub').textContent = reg ? (reg.status==='inativa' ? 'Equipe cadastrada · inativa' : '✅ Equipe própria cadastrada') : 'Equipe identificada nas ordens importadas (não cadastrada)';
+  const indicadores = [
+    ['Total de OS executadas', k.total],
+    ['Total de atrasos', k.atraso],
+    ['Total de religações', religacoes],
+    ['Total de restabelecimentos', restabelecimentos],
+    ['SLA', `${sla}${sla!=='—'?'%':''}`],
+    ['Regiões atendidas', regioes],
+  ];
+  let html = indicadores.map(([label,val]) => `
+    <div class="field-row"><div class="field-label">${label}</div><div class="field-val">${val}</div></div>
+  `).join('');
+  html += `<div style="margin-top:18px;"><div class="panel-title" style="font-size:13.5px;margin-bottom:8px;">Histórico da equipe</div>`;
+  if(reg){
+    html += `
+      <div class="field-row"><div class="field-label">Integrantes</div><div class="field-val">${escapeHtml(reg.integrantes || '—')}</div></div>
+      <div class="field-row"><div class="field-label">Data de cadastro</div><div class="field-val">${fmtDateFull(reg.dataCadastro ? reg.dataCadastro.replace('T',' ').slice(0,19) : '')}</div></div>
+      <div class="field-row"><div class="field-label">Status</div><div class="field-val">${reg.status==='inativa'?'Inativa':'Ativa'}</div></div>
+      ${reg.observacoes ? `<div class="field-note"><b>Observações:</b> ${escapeHtml(reg.observacoes)}</div>` : ''}
+    `;
+  } else {
+    html += `<div class="exclude-empty">Esta equipe ainda não foi cadastrada. Use "Cadastrar" na tabela de equipes para registrar integrantes e observações.</div>`;
+  }
+  html += `</div>`;
+  document.getElementById('teamDetailBody').innerHTML = html;
+  document.getElementById('teamDetailOverlay').classList.add('show');
+}
+function closeTeamDetail(){
+  document.getElementById('teamDetailOverlay').classList.remove('show');
+}
+document.getElementById('teamDetailClose').addEventListener('click', closeTeamDetail);
+document.getElementById('teamDetailCloseFoot').addEventListener('click', closeTeamDetail);
+document.getElementById('teamDetailOverlay').addEventListener('click', event => { if(event.target.id === 'teamDetailOverlay') closeTeamDetail(); });
+
+/* ---------------- ranking de equipes ---------------- */
+function renderRanking(){
+  const byTeam = {};
+  DATA.forEach(r => {
+    if(!byTeam[r.equipe]) byTeam[r.equipe] = [];
+    byTeam[r.equipe].push(r);
+  });
+  const entries = Object.entries(byTeam).map(([name, rows]) => {
+    const k = computeKpis(rows);
+    const sla = k.total ? ((k.total - k.atraso) / k.total) * 100 : 0;
+    const pctAtraso = k.total ? (k.atraso / k.total) * 100 : 0;
+    return {name: titleCase(name.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()), total:k.total, atraso:k.atraso, sla, pctAtraso};
+  });
+
+  const byVolume = [...entries].sort((a,b)=>b.total-a.total).slice(0,8);
+  document.getElementById('rankVolume').innerHTML = byVolume.map((e,i) => `
+    <div class="rank-row"><span class="rank-pos">${i+1}º</span><span class="rank-name">${escapeHtml(e.name)}</span><span class="rank-val">${e.total}</span></div>
+  `).join('') || '<div class="empty-state">Sem dados</div>';
+
+  const byProdutividade = [...entries].sort((a,b)=>b.sla-a.sla || b.total-a.total).slice(0,8);
+  document.getElementById('rankProdutividade').innerHTML = byProdutividade.map((e,i) => `
+    <div class="rank-row"><span class="rank-pos">${i+1}º</span><span class="rank-name">${escapeHtml(e.name)}</span><span class="rank-val">${e.total} OS · ${e.sla.toFixed(0)}% SLA</span></div>
+  `).join('') || '<div class="empty-state">Sem dados</div>';
+
+  const byAtraso = [...entries].filter(e=>e.atraso>0).sort((a,b)=>b.atraso-a.atraso).slice(0,8);
+  document.getElementById('rankAtrasos').innerHTML = byAtraso.map((e,i) => `
+    <div class="rank-row"><span class="rank-pos">${i+1}º</span><span class="rank-name">${escapeHtml(e.name)}</span><span class="rank-val" style="color:var(--red)">${e.atraso} (${e.pctAtraso.toFixed(0)}%)</span></div>
+  `).join('') || '<div class="empty-state">Nenhuma equipe com atraso 🎉</div>';
 }
 
 /* ---------------- atraso tab ---------------- */
@@ -1263,48 +2051,114 @@ function renderLateTable(){
       <td>${titleCase(r.regiao)}</td>
       <td>${escapeHtml(titleCase(r.equipe.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}</td>
       <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
-      <td class="mono">${fmtDate(r.prazoExecucao)}</td>
-      <td><span class="badge badge-late">${r.tempoResidual}</span></td>
+      ${prazoCellHtml(r)}
+      <td><span class="badge badge-late">${escapeHtml(r.tempoResidual || (computeRemaining(r.prazoExecucao)?.label || '—'))}</span></td>
     </tr>`).join('');
-  document.getElementById('lateTableBody').querySelectorAll('tr').forEach(tr => {
+  const lateBody = document.getElementById('lateTableBody');
+  lateBody.querySelectorAll('tr').forEach(tr => {
     tr.addEventListener('click', () => openDrawer(parseInt(tr.dataset.os,10)));
   });
+  bindPrazoPopovers(lateBody);
 }
 
 /* ---------------- drawer ---------------- */
+let currentModalOs = null;
 function openDrawer(osNum){
-  const r = DATA.find(d => d.os === osNum);
+  const r = DATA_FULL.find(d => d.os === osNum) || DATA.find(d => d.os === osNum);
   if(!r) return;
-  document.getElementById('drawerTitle').textContent = `OS ${r.os}`;
-  document.getElementById('drawerSub').textContent = r.servico;
+  currentModalOs = r.os;
+  document.getElementById('osModalTitle').textContent = `OS ${r.os}`;
+  document.getElementById('osModalSub').textContent = r.servico;
+  const remain = computeRemaining(r.prazoExecucao);
   const fields = [
+    ['Número da OS', `<span class="mono">${r.os}</span>`],
+    ['Serviço', escapeHtml(r.servico)],
     ['Status', `<span class="badge ${statusBadgeClass(r.status)}">${r.status}</span>`],
     ['Situação de prazo', situacaoBadge(r.situacao)],
-    ['Região / Unidade', `${titleCase(r.regiao)}`],
+    ['Região', titleCase(r.regiao)],
+    ['Unidade Executante', r.unidade || '—'],
     ['Equipe', titleCase(r.equipe.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim())],
-    ['Endereço', `${r.endereco}${r.numero?', '+r.numero:''} ${r.complemento||''}`],
-    ['Bairro', r.bairro],
-    ['Município', r.municipio],
+    ['Endereço completo', `${escapeHtml(r.endereco)}${r.numero?', '+r.numero:''} ${escapeHtml(r.complemento||'')}`],
+    ['Bairro', escapeHtml(r.bairro)],
+    ['Município', escapeHtml(r.municipio)],
     ['Setor', r.setor],
-    ['ATC', r.atc],
-    ['Data de inserção', fmtDate(r.dataInsercao)],
-    ['Competência', fmtDate(r.dataCompetencia)],
-    ['Prazo de execução', fmtDate(r.prazoExecucao)],
-    ['Tempo residual', r.tempoResidual],
-    ['Contrato', r.contrato],
+    ['ATC', escapeHtml(r.atc)],
+    ['Data de Inserção', fmtDateFull(r.dataInsercao)],
+    ['Data de Competência', fmtDateFull(r.dataCompetencia)],
+    ['Prazo de Execução', fmtDateFull(r.prazoExecucao)],
+    ['Tempo Restante', remain ? `<span style="color:${remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)'}">${remain.label}</span>` : (r.tempoResidual || '—')],
+    ['Contrato', escapeHtml(r.contrato)],
   ];
-  document.getElementById('drawerBody').innerHTML = fields.map(([label,val]) => `
+  document.getElementById('osModalGrid').innerHTML = fields.map(([label,val]) => `
     <div class="field-row"><div class="field-label">${label}</div><div class="field-val">${val}</div></div>
-  `).join('') + (r.causa ? `<div class="field-note"><b>Causa/Resultado:</b> ${escapeHtml(r.causa)}</div>` : '');
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('drawer').classList.add('show');
+  `).join('');
+  const causaEl = document.getElementById('osModalCausa');
+  if(r.causa){ causaEl.style.display = 'block'; causaEl.innerHTML = `<b>Resultado / Causa:</b> ${escapeHtml(r.causa)}`; }
+  else { causaEl.style.display = 'none'; causaEl.innerHTML = ''; }
+  const copyBtn = document.getElementById('btnCopyOs');
+  copyBtn.classList.remove('copied');
+  document.getElementById('btnCopyOsLabel').textContent = 'Copiar OS';
+  document.getElementById('osModalOverlay').classList.add('show');
 }
 function closeDrawer(){
-  document.getElementById('overlay').classList.remove('show');
-  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('osModalOverlay').classList.remove('show');
+  currentModalOs = null;
 }
-document.getElementById('overlay').addEventListener('click', closeDrawer);
-document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('osModalOverlay').addEventListener('click', event => { if(event.target.id === 'osModalOverlay') closeDrawer(); });
+document.getElementById('osModalClose').addEventListener('click', closeDrawer);
+document.getElementById('osModalCloseFoot').addEventListener('click', closeDrawer);
+document.getElementById('btnCopyOs').addEventListener('click', () => {
+  if(currentModalOs === null) return;
+  const text = String(currentModalOs);
+  const done = () => {
+    document.getElementById('btnCopyOs').classList.add('copied');
+    document.getElementById('btnCopyOsLabel').textContent = 'Copiado!';
+    setTimeout(() => {
+      document.getElementById('btnCopyOs').classList.remove('copied');
+      document.getElementById('btnCopyOsLabel').textContent = 'Copiar OS';
+    }, 1600);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(() => {
+      try{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }catch(err){}
+    });
+  } else {
+    try{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }catch(err){}
+  }
+});
+document.addEventListener('keydown', event => { if(event.key === 'Escape'){ closeDrawer(); closeTeamDetail(); closeTeamForm(); } });
+
+/* ---------------- popup de prazo (clique na coluna Prazo) ---------------- */
+function bindPrazoPopovers(container){
+  container.querySelectorAll('[data-prazo-os]').forEach(cell => {
+    cell.addEventListener('click', event => {
+      event.stopPropagation();
+      openPrazoPopover(cell, parseInt(cell.dataset.prazoOs,10));
+    });
+  });
+}
+function openPrazoPopover(anchorEl, osNum){
+  const r = DATA_FULL.find(d => d.os === osNum) || DATA.find(d => d.os === osNum);
+  const pop = document.getElementById('prazoPopover');
+  if(!r || !pop) return;
+  const remain = computeRemaining(r.prazoExecucao);
+  pop.innerHTML = `
+    <div class="prazo-popover-title">OS ${r.os} · Prazo de execução</div>
+    <div class="prazo-popover-row"><span class="prazo-popover-label">Vencimento</span><span class="prazo-popover-val">${fmtDateFull(r.prazoExecucao)}</span></div>
+    <div class="prazo-popover-row"><span class="prazo-popover-label">Tempo restante</span><span class="prazo-popover-val" style="color:${remain ? (remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)') : 'inherit'}">${remain ? remain.label : (r.tempoResidual || '—')}</span></div>
+  `;
+  const rect = anchorEl.getBoundingClientRect();
+  pop.style.left = Math.min(rect.left, window.innerWidth - 250) + 'px';
+  pop.style.top = (rect.bottom + 8) + 'px';
+  pop.classList.add('show');
+}
+function closePrazoPopover(){
+  document.getElementById('prazoPopover').classList.remove('show');
+}
+document.addEventListener('click', event => {
+  if(!event.target.closest('#prazoPopover') && !event.target.closest('[data-prazo-os]')) closePrazoPopover();
+});
+document.addEventListener('keydown', event => { if(event.key === 'Escape') closePrazoPopover(); });
 
 /* ---------------- tabs ---------------- */
 function switchTab(tab){
@@ -1332,7 +2186,9 @@ function switchTab(tab){
   document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
   document.getElementById('tab-'+visibleTab).style.display = 'block';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', admin:'Administração'};
+  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração'};
+  if(tab === 'historico'){ renderHistorico(); }
+  if(tab === 'equipes'){ renderRanking(); }
   document.getElementById('crumbCurrent').textContent = names[tab];
 }
 function openLateOrders(event){
@@ -1349,8 +2205,12 @@ document.querySelectorAll('#navMenu .nav-item').forEach(button => {
   if(button.dataset.tab === 'atraso') return;
   button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); switchTab(button.dataset.tab); });
 });
-document.getElementById('btnGoTable').addEventListener('click', () => switchTab('ordens'));
 document.getElementById('btnClearFilters').addEventListener('click', clearTableFilters);
+document.getElementById('btnPrimarizationFilter').addEventListener('click', () => {
+  primarizationFilterActive = !primarizationFilterActive;
+  document.getElementById('btnPrimarizationFilter').classList.toggle('active', primarizationFilterActive);
+  renderTable();
+});
 
 /* ---------------- export buttons ---------------- */
 function exportRows(rows, filename){
@@ -1361,16 +2221,55 @@ function exportRows(rows, filename){
   }));
   downloadCSV(mapped, filename);
 }
-document.getElementById('btnExportOverview').addEventListener('click', () => exportRows(DATA, 'ordens_servico_todas.csv'));
 document.getElementById('btnExportTable').addEventListener('click', () => exportRows(filteredRows(), 'ordens_servico_filtradas.csv'));
 
 /* ---------------- init ---------------- */
 try{
   initTableFilters();
+  renderExcludedChips();
+  renderExcludedTeamsChips();
   refreshDashboard();
+  if(importMeta && importMeta.fileName){
+    const when = importMeta.importedAt ? new Date(importMeta.importedAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    document.getElementById('importMessage').textContent = `Dados salvos no navegador · última importação: ${importMeta.fileName}${when ? ' em '+when : ''}.`;
+  }
 }catch(err){
   console.error('Primarização · falha na inicialização', err);
 }
+
+/* exclusão de serviços por lista suspensa */
+document.getElementById('btnExcludeService').addEventListener('click', () => {
+  const select = document.getElementById('excludeServiceSelect');
+  const term = select.value;
+  if(!term) return;
+  if(!excludedServiceTerms.some(t => normaliseText(t) === normaliseText(term))){
+    excludedServiceTerms.push(term);
+    markServiceExclusionsDirty();
+    renderExcludedChips();
+    reapplyServiceExclusions();
+  }
+  select.value = '';
+});
+document.getElementById('btnSaveServiceExclusions').addEventListener('click', () => {
+  saveExcludedServiceTerms();
+  serviceExclusionsDirty = false;
+  const btn = document.getElementById('btnSaveServiceExclusions');
+  const status = document.getElementById('serviceSaveStatus');
+  btn.disabled = true;
+  status.textContent = 'Alterações salvas';
+  status.className = 'save-status saved';
+});
+
+/* exclusão/salvamento de equipes */
+document.getElementById('btnSaveTeams').addEventListener('click', () => {
+  saveExcludedTeams();
+  teamExclusionsDirty = false;
+  const btn = document.getElementById('btnSaveTeams');
+  const status = document.getElementById('teamSaveStatus');
+  btn.disabled = true;
+  status.textContent = 'Alterações salvas';
+  status.className = 'save-status saved';
+});
 
 /* ---------------- mobile sidebar (hamburger drawer) ---------------- */
 function closeMobileSidebar(){
@@ -1432,8 +2331,9 @@ if(appAlreadyLoggedIn){ applyRolePermissions(); showApp(); } else { showLogin();
 /* ---------------- role permissions ---------------- */
 function applyRolePermissions(){
   const isAdmin = currentRole === 'admin';
-  document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = isAdmin ? 'flex' : 'none'; });
+  document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = isAdmin ? '' : 'none'; });
   if(!isAdmin && activeTab === 'admin'){ switchTab('overview'); }
+  try{ renderTeamsTable(); }catch(err){}
 }
 
 /* ---------------- admin: user management ---------------- */
