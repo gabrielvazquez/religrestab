@@ -556,7 +556,7 @@
     <div class="sidebar-foot">
       <div class="status-pill">
         <span class="dot"></span>
-        Base atualizada · <span id="footUpdate">—</span> · <span style="opacity:.6">2.1</span>
+        Base atualizada · <span id="footUpdate">—</span> · <span style="opacity:.6">versão prazo-relógio 2.2</span>
       </div>
     </div>
   </aside>
@@ -1239,7 +1239,11 @@ function normaliseRowDates(r){
   return r;
 }
 function recomputeSituacao(rows){
-  return rows.map(r => { const row = normaliseRowDates({...r}); row.situacao = parseResidual(null, row.prazoExecucao).cat; return row; });
+  return rows.map(r => { const row = normaliseRowDates({...r});
+    if(!row.regiao || row.regiao === 'NÃO INFORMADA'){
+      const reg = inferRegion([row.regiao, row.unidade, row.atc, row.setor].join(' '));
+      if(reg !== 'NÃO INFORMADA') row.regiao = reg;
+    } row.situacao = parseResidual(null, row.prazoExecucao).cat; return row; });
 }
 /* Atualiza a situação de prazo de todas as ordens usando a hora atual do computador.
    DATA compartilha os mesmos objetos de DATA_FULL, então os dois ficam atualizados. */
@@ -1653,7 +1657,7 @@ function mapImportedRows(rows){
     }
     const residual = String(valueByAliases(row,['temporesidual','residual','tempo']) || '');
     const unidade = valueByAliases(row,['unidade','unidadeoperacional','unidadeexecutante']);
-    const regiao = inferRegion(valueByAliases(row,['regiao','unidadeoperacional','area']) || unidade);
+    const regiao = inferRegion([valueByAliases(row,['regiao','unidadeoperacional','area']), unidade, valueByAliases(row,['atc']), valueByAliases(row,['setor'])].join(' '));
     const mapped = {
       os: valueByAliases(row,['os','numeroos','ordemservico','numerodaos']) || `IMPORT-${index+1}`,
       regiao, unidade,
@@ -1677,7 +1681,7 @@ function inferRegion(value){
   if(text.includes('IPIRANGA')) return 'IPIRANGA';
   if(text.includes('MOOCA')) return 'MOOCA';
   if(text.includes('SAO MATEUS')) return 'SÃO MATEUS';
-  if(text.includes('SANTO ANDRE')) return 'SANTO ANDRÉ';
+  if(text.includes('SANTO ANDRE') || text.includes('TAMANDUATEI')) return 'SANTO ANDRÉ';
   return 'NÃO INFORMADA';
 }
 function dedupeRawRows(rows){
