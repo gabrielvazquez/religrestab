@@ -556,7 +556,7 @@
     <div class="sidebar-foot">
       <div class="status-pill">
         <span class="dot"></span>
-        Base atualizada · <span id="footUpdate">—</span>
+        Base atualizada · <span id="footUpdate">—</span> · <span style="opacity:.6">2.1</span>
       </div>
     </div>
   </aside>
@@ -709,6 +709,7 @@
               <option value="atraso">Em atraso</option>
               <option value="24h">Vence em &lt;24h</option>
               <option value="ok">No prazo</option>
+              <option value="semprazo">Sem prazo definido</option>
             </select>
             <button class="btn" id="btnClearFilters" type="button">Limpar filtros</button>
             <span class="result-count" id="resultCount"></span>
@@ -1092,40 +1093,59 @@ function isPrimarizationService(servico){
 }
 
 /* ---------------- helpers ---------------- */
+/* Situação do prazo calculada SEMPRE com o relógio atual do computador */
 function parseResidual(tr, prazo){
   const prazoDate = parseDateTime(prazo);
-  if(prazoDate){
-    const hours = (prazoDate.getTime() - Date.now()) / 3600000;
-    if(hours < 0) return {cat:'atraso', hours};
-    if(hours < 24) return {cat:'24h', hours};
-    return {cat:'ok', hours};
+  if(!prazoDate) return {cat:'semprazo', hours:null};
+  const hours = (prazoDate.getTime() - Date.now()) / 3600000;
+  if(hours < 0) return {cat:'atraso', hours};
+  if(hours < 24) return {cat:'24h', hours};
+  return {cat:'ok', hours};
+}
+/* Converte qualquer formato de data vindo da planilha para o texto padrão
+   "AAAA-MM-DD HH:MM:SS" (horário local, exatamente como aparece na planilha).
+   Aceita: número de série do Excel, "dd/mm/aaaa hh:mm[:ss]", "aaaa-mm-dd hh:mm[:ss]" e Date. */
+function toWallClockString(value){
+  const pad = n => String(n).padStart(2,'0');
+  const build = (y,mo,d,h,mi,se) => `${y}-${pad(mo)}-${pad(d)} ${pad(h)}:${pad(mi)}:${pad(se)}`;
+  if(value === null || value === undefined) return '';
+  if(value instanceof Date){
+    if(isNaN(value)) return '';
+    return build(value.getFullYear(), value.getMonth()+1, value.getDate(), value.getHours(), value.getMinutes(), value.getSeconds());
   }
-  return {cat:'ok', hours:30};
+  if(typeof value === 'number'){
+    if(!isFinite(value) || value <= 0) return '';
+    // número de série do Excel: calcula em UTC só para extrair os campos, sem deslocar fuso
+    const d = new Date(Date.UTC(1899,11,30) + Math.round(value*86400)*1000);
+    return build(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
+  }
+  const raw = String(value).trim();
+  if(!raw) return '';
+  if(/^\d+([.,]\d+)?$/.test(raw)) return toWallClockString(Number(raw.replace(',','.')));
+  let m = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if(m){
+    const y = m[3].length===2 ? 2000+Number(m[3]) : Number(m[3]);
+    return build(y, Number(m[2]), Number(m[1]), Number(m[4]||0), Number(m[5]||0), Number(m[6]||0));
+  }
+  m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if(m) return build(Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]||0), Number(m[5]||0), Number(m[6]||0));
+  return '';
 }
 function parseDateTime(value){
-  if(value instanceof Date && !isNaN(value)) return value;
-  if(typeof value === 'number' && isFinite(value)) return new Date(Date.UTC(1899,11,30) + value*86400000);
-  const raw = String(value || '').trim();
-  if(!raw) return null;
-  const br = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-  if(br){
-    const year = br[3].length===2 ? 2000 + Number(br[3]) : Number(br[3]);
-    const date = new Date(year, Number(br[2])-1, Number(br[1]), Number(br[4]||0), Number(br[5]||0), Number(br[6]||0));
-    return isNaN(date) ? null : date;
-  }
-  const date = new Date(raw.replace(' ','T'));
+  const txt = toWallClockString(value);
+  if(!txt) return null;
+  const m = txt.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+  const date = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6]));
   return isNaN(date) ? null : date;
 }
 function fmtDate(s){
-  if(!s) return '—';
-  const d = new Date(s.replace(' ','T'));
-  if(isNaN(d)) return s;
+  const d = parseDateTime(s);
+  if(!d) return s ? escapeHtml(String(s)) : '—';
   return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
 function fmtDateFull(s){
-  if(!s) return '—';
-  const d = new Date(s.replace(' ','T'));
-  if(isNaN(d)) return s;
+  const d = parseDateTime(s);
+  if(!d) return s ? escapeHtml(String(s)) : '—';
   return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 /* Converte um total de horas (pode ser negativo) em texto "1d,4h,50m" */
@@ -1160,7 +1180,7 @@ function prazoCellHtml(r){
   const dateText = r.prazoExecucao ? fmtDate(r.prazoExecucao) : '—';
   const remainHtml = remain
     ? `<span class="prazo-remain ${remain.cls}">${remain.label}</span>`
-    : (r.tempoResidual ? `<span class="prazo-remain">${escapeHtml(r.tempoResidual)}</span>` : '<span class="prazo-remain">Sem prazo definido</span>');
+    : '<span class="prazo-remain">Sem prazo definido</span>';
   return `<td class="mono"><div class="prazo-cell" data-prazo-os="${r.os}"><span class="prazo-date">${dateText}</span>${remainHtml}</div></td>`;
 }
 function statusBadgeClass(status){
@@ -1172,6 +1192,7 @@ function statusBadgeClass(status){
 function situacaoBadge(cat){
   if(cat === 'atraso') return '<span class="badge badge-late">Em atraso</span>';
   if(cat === '24h') return '<span class="badge badge-24h">&lt; 24h</span>';
+  if(cat === 'semprazo') return '<span class="badge badge-planned">Sem prazo</span>';
   return '<span class="badge badge-ok">No prazo</span>';
 }
 function escapeHtml(s){
@@ -1210,8 +1231,20 @@ function enrichRawData(raw){
     return {...clean, situacao: p.cat};
   });
 }
+function normaliseRowDates(r){
+  ['prazoExecucao','dataInsercao','dataCompetencia'].forEach(k => {
+    const norm = toWallClockString(r[k]);
+    if(norm) r[k] = norm;
+  });
+  return r;
+}
 function recomputeSituacao(rows){
-  return rows.map(r => ({...r, situacao: parseResidual(r.tempoResidual, r.prazoExecucao).cat}));
+  return rows.map(r => { const row = normaliseRowDates({...r}); row.situacao = parseResidual(null, row.prazoExecucao).cat; return row; });
+}
+/* Atualiza a situação de prazo de todas as ordens usando a hora atual do computador.
+   DATA compartilha os mesmos objetos de DATA_FULL, então os dois ficam atualizados. */
+function refreshSituacaoNow(){
+  DATA_FULL.forEach(r => { r.situacao = parseResidual(null, r.prazoExecucao).cat; });
 }
 
 /* ---------------- persistência local dos dados importados ----------------
@@ -1245,13 +1278,20 @@ if(persistedRows){
 }
 let DATA = applyAllExclusions(DATA_FULL);
 
-/* last update — sincronizado com o relógio do computador, não com a data estática da planilha */
+/* "Base atualizada" = data e hora da última vez que uma planilha foi importada */
 function updateFootClock(){
   const el = document.getElementById('footUpdate');
-  if(el) el.textContent = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(!el) return;
+  const when = importMeta && importMeta.importedAt ? new Date(importMeta.importedAt) : null;
+  if(when && !isNaN(when)){
+    el.textContent = when.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    el.title = importMeta.fileName ? `Última importação: ${importMeta.fileName}` : '';
+  } else {
+    el.textContent = 'nenhuma planilha importada';
+    el.title = '';
+  }
 }
 updateFootClock();
-setInterval(updateFootClock, 30000);
 
 /* ---------------- state ---------------- */
 let currentRegion = null; // null = todas
@@ -1350,6 +1390,7 @@ function renderMiniKpis(){
 }
 
 function refreshDashboard(){
+  refreshSituacaoNow();
   const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico];
   steps.forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao renderizar', step.name, err); }
@@ -1580,22 +1621,20 @@ function initTableFilters(){
 function normaliseKey(key){
   return String(key || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 }
+function normaliseKeyLoose(key){
+  return String(key || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .split(/[^a-z0-9]+/).filter(w => w && !['de','da','do','das','dos','e'].includes(w)).join('');
+}
 function valueByAliases(row, aliases){
   const entries = Object.entries(row);
   for(const alias of aliases){
-    const found = entries.find(([key]) => normaliseKey(key) === alias);
+    const found = entries.find(([key]) => normaliseKey(key) === alias || normaliseKeyLoose(key) === alias);
     if(found && found[1] !== undefined && found[1] !== null) return found[1];
   }
   return '';
 }
 function formatImportedDate(value){
-  const pad = n => String(n).padStart(2,'0');
-  if(value instanceof Date && !isNaN(value)) return `${value.getUTCFullYear()}-${pad(value.getUTCMonth()+1)}-${pad(value.getUTCDate())} ${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(value.getUTCSeconds())}`;
-  if(typeof value === 'number' && isFinite(value)){
-    const date = new Date(Date.UTC(1899,11,30) + value*86400000);
-    return `${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
-  }
-  return String(value || '').trim();
+  return toWallClockString(value);
 }
 function parseCsv(text){
   const lines = String(text || '').replace(/^\uFEFF/,'').split(/\r?\n/).filter(line=>line.trim());
@@ -1607,7 +1646,11 @@ function parseCsv(text){
 }
 function mapImportedRows(rows){
   return rows.map((row, index) => {
-    const prazo = formatImportedDate(valueByAliases(row,['prazoexecucao','prazo','dataprazo']));
+    let prazo = formatImportedDate(valueByAliases(row,['prazoexecucao','prazo','dataprazo','prazofinal','dataprazoexecucao']));
+    if(!prazo){
+      const key = Object.keys(row).find(k => { const n = normaliseKey(k); return n.includes('prazo') && !n.includes('tempo'); });
+      if(key) prazo = formatImportedDate(row[key]);
+    }
     const residual = String(valueByAliases(row,['temporesidual','residual','tempo']) || '');
     const unidade = valueByAliases(row,['unidade','unidadeoperacional','unidadeexecutante']);
     const regiao = inferRegion(valueByAliases(row,['regiao','unidadeoperacional','area']) || unidade);
@@ -1621,11 +1664,11 @@ function mapImportedRows(rows){
       numero: valueByAliases(row,['numero','numeroendereco']), complemento: valueByAliases(row,['complemento']),
       bairro: valueByAliases(row,['bairro']), municipio: valueByAliases(row,['municipio','cidade']) || '—',
       setor: valueByAliases(row,['setor']), atc: valueByAliases(row,['atc']),
-      dataInsercao: formatImportedDate(valueByAliases(row,['datainsercao','insercao','data'])) || new Date().toISOString().slice(0,19).replace('T',' '),
+      dataInsercao: formatImportedDate(valueByAliases(row,['datainsercao','insercao','dataabertura','data'])) || new Date().toISOString().slice(0,19).replace('T',' '),
       dataCompetencia: formatImportedDate(valueByAliases(row,['datacompetencia','competencia'])), prazoExecucao: prazo,
       tempoResidual: residual, causa: valueByAliases(row,['causa','resultado']), contrato: valueByAliases(row,['contrato'])
     };
-    return {...mapped, situacao:parseResidual(residual, prazo).cat};
+    return {...mapped, situacao:parseResidual(null, prazo).cat};
   }).filter(row => row.os || row.endereco !== 'Não informado');
 }
 function inferRegion(value){
@@ -1657,15 +1700,20 @@ function updateImportedData(rows, fileName){
   tableFilters = {regiao:'', status:'', situacao:'', servico:'', q:''};
   document.getElementById('tableSearch').value = '';
   document.getElementById('globalSearch').value = '';
+  importMeta = {fileName, importedAt: new Date().toISOString()};
+  saveImportMeta();
   initTableFilters();
   updateFootClock();
   renderExcludedChips();
   renderExcludedTeamsChips();
   savePersistedData(DATA_FULL);
-  importMeta = {fileName, importedAt: new Date().toISOString()};
-  saveImportMeta();
   refreshDashboard();
-  document.getElementById('importMessage').textContent = `${DATA.length} ordens importadas de ${fileName}${DATA_FULL.length !== DATA.length ? ` (${DATA_FULL.length - DATA.length} ocultas por exclusões ativas)` : ''}.`;
+  const semPrazo = DATA_FULL.filter(r => !parseDateTime(r.prazoExecucao)).length;
+  if(semPrazo === DATA_FULL.length){
+    document.getElementById('importMessage').textContent = `Atenção: nenhuma OS teve o Prazo de Execução reconhecido. Colunas encontradas: ${Object.keys(rows[0]||{}).join(' | ')}`;
+    return;
+  }
+  document.getElementById('importMessage').textContent = (semPrazo ? `${semPrazo} OS sem prazo reconhecido · ` : '') + `${DATA.length} ordens importadas de ${fileName}${DATA_FULL.length !== DATA.length ? ` (${DATA_FULL.length - DATA.length} ocultas por exclusões ativas)` : ''}.`;
 }
 function reapplyServiceExclusions(){
   DATA = applyAllExclusions(DATA_FULL);
@@ -1733,7 +1781,7 @@ function readOneFile(file){
         if(isCsv){
           resolve(parseCsv(reader.result));
         } else {
-          const workbook = XLSX.read(reader.result,{type:'array',cellDates:true});
+          const workbook = XLSX.read(reader.result,{type:'array',cellDates:false});
           const reportSheet = workbook.SheetNames.find(name => normaliseKey(name).includes('relatoriorestabrelig')) || workbook.SheetNames[0];
           resolve(XLSX.utils.sheet_to_json(workbook.Sheets[reportSheet], {defval:'',raw:true}));
         }
@@ -1807,7 +1855,7 @@ function filteredRows(){
     if(tableFilters.regiao && normaliseText(r.regiao) !== normaliseText(tableFilters.regiao)) return false;
     if(tableFilters.status && normaliseText(r.status) !== normaliseText(tableFilters.status)) return false;
     if(tableFilters.servico && normaliseText(r.servico) !== normaliseText(tableFilters.servico)) return false;
-    if(tableFilters.situacao && r.situacao !== tableFilters.situacao) return false;
+    if(tableFilters.situacao && parseResidual(null, r.prazoExecucao).cat !== tableFilters.situacao) return false;
     if(tableFilters.q){
       const hay = `${r.os} ${r.endereco} ${r.bairro} ${r.equipe} ${r.servico} ${r.regiao}`.toLowerCase();
       if(!hay.includes(tableFilters.q)) return false;
@@ -1839,10 +1887,18 @@ function renderTableHead(){
 }
 
 function renderTable(){
+  refreshSituacaoNow();
   renderTableHead();
   let rows = filteredRows();
   rows.sort((a,b) => {
     let va = a[sortKey], vb = b[sortKey];
+    if(['prazoExecucao','dataInsercao','dataCompetencia'].includes(sortKey)){
+      const ta = parseDateTime(va), tb = parseDateTime(vb);
+      if(!ta && !tb) return 0;
+      if(!ta) return 1;
+      if(!tb) return -1;
+      return sortDir==='asc' ? ta - tb : tb - ta;
+    }
     if(typeof va === 'string') va = va.toLowerCase();
     if(typeof vb === 'string') vb = vb.toLowerCase();
     if(va < vb) return sortDir==='asc' ? -1 : 1;
@@ -2041,7 +2097,8 @@ function renderRanking(){
 function renderLateTable(){
   const thead = document.getElementById('lateTableHead');
   thead.innerHTML = COLUMNS.filter(c=>c.key!=='situacao').map(c=>`<th>${c.label}</th>`).join('') + '<th>Tempo</th>';
-  const rows = DATA.filter(r=>r.situacao==='atraso');
+  refreshSituacaoNow();
+  const rows = DATA.filter(r=>r.situacao==='atraso').sort((a,b)=>parseDateTime(a.prazoExecucao)-parseDateTime(b.prazoExecucao));
   document.getElementById('lateEmptyState').style.display = rows.length ? 'none' : 'block';
   document.getElementById('lateTableBody').innerHTML = rows.map(r => `
     <tr data-os="${r.os}">
@@ -2052,7 +2109,7 @@ function renderLateTable(){
       <td>${escapeHtml(titleCase(r.equipe.replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}</td>
       <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
       ${prazoCellHtml(r)}
-      <td><span class="badge badge-late">${escapeHtml(r.tempoResidual || (computeRemaining(r.prazoExecucao)?.label || '—'))}</span></td>
+      <td><span class="badge badge-late">${escapeHtml(computeRemaining(r.prazoExecucao)?.label || '—')}</span></td>
     </tr>`).join('');
   const lateBody = document.getElementById('lateTableBody');
   lateBody.querySelectorAll('tr').forEach(tr => {
@@ -2064,7 +2121,7 @@ function renderLateTable(){
 /* ---------------- drawer ---------------- */
 let currentModalOs = null;
 function openDrawer(osNum){
-  const r = DATA_FULL.find(d => d.os === osNum) || DATA.find(d => d.os === osNum);
+  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum));
   if(!r) return;
   currentModalOs = r.os;
   document.getElementById('osModalTitle').textContent = `OS ${r.os}`;
@@ -2086,7 +2143,7 @@ function openDrawer(osNum){
     ['Data de Inserção', fmtDateFull(r.dataInsercao)],
     ['Data de Competência', fmtDateFull(r.dataCompetencia)],
     ['Prazo de Execução', fmtDateFull(r.prazoExecucao)],
-    ['Tempo Restante', remain ? `<span style="color:${remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)'}">${remain.label}</span>` : (r.tempoResidual || '—')],
+    ['Tempo Restante', remain ? `<span style="color:${remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)'}">${remain.label}</span>` : 'Sem prazo definido'],
     ['Contrato', escapeHtml(r.contrato)],
   ];
   document.getElementById('osModalGrid').innerHTML = fields.map(([label,val]) => `
@@ -2138,14 +2195,14 @@ function bindPrazoPopovers(container){
   });
 }
 function openPrazoPopover(anchorEl, osNum){
-  const r = DATA_FULL.find(d => d.os === osNum) || DATA.find(d => d.os === osNum);
+  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum));
   const pop = document.getElementById('prazoPopover');
   if(!r || !pop) return;
   const remain = computeRemaining(r.prazoExecucao);
   pop.innerHTML = `
     <div class="prazo-popover-title">OS ${r.os} · Prazo de execução</div>
     <div class="prazo-popover-row"><span class="prazo-popover-label">Vencimento</span><span class="prazo-popover-val">${fmtDateFull(r.prazoExecucao)}</span></div>
-    <div class="prazo-popover-row"><span class="prazo-popover-label">Tempo restante</span><span class="prazo-popover-val" style="color:${remain ? (remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)') : 'inherit'}">${remain ? remain.label : (r.tempoResidual || '—')}</span></div>
+    <div class="prazo-popover-row"><span class="prazo-popover-label">Tempo restante</span><span class="prazo-popover-val" style="color:${remain ? (remain.cls==='bad'?'var(--red)':remain.cls==='warn'?'var(--amber)':'var(--green)') : 'inherit'}">${remain ? remain.label : 'Sem prazo definido'}</span></div>
   `;
   const rect = anchorEl.getBoundingClientRect();
   pop.style.left = Math.min(rect.left, window.innerWidth - 250) + 'px';
@@ -2217,7 +2274,8 @@ function exportRows(rows, filename){
   const mapped = rows.map(r => ({
     'Número OS': r.os, 'Região': titleCase(r.regiao), 'Serviço': r.servico, 'Status': r.status,
     'Equipe': r.equipe, 'Endereço': r.endereco, 'Número': r.numero, 'Bairro': r.bairro,
-    'Prazo de Execução': r.prazoExecucao, 'Tempo Residual': r.tempoResidual, 'Situação': r.situacao,
+    'Prazo de Execução': fmtDateFull(r.prazoExecucao), 'Tempo Restante': computeRemaining(r.prazoExecucao)?.label || 'Sem prazo definido',
+    'Situação': ({atraso:'Em atraso','24h':'Vence em <24h',ok:'No prazo',semprazo:'Sem prazo'})[parseResidual(null, r.prazoExecucao).cat],
   }));
   downloadCSV(mapped, filename);
 }
@@ -2229,13 +2287,29 @@ try{
   renderExcludedChips();
   renderExcludedTeamsChips();
   refreshDashboard();
-  if(importMeta && importMeta.fileName){
+  if(DATA_FULL.length && DATA_FULL.every(r => !parseDateTime(r.prazoExecucao))){
+    const msg = document.getElementById('importMessage');
+    if(msg) msg.textContent = 'Os dados salvos são de uma versão antiga e estão sem prazo. Importe a planilha novamente para calcular os prazos.';
+  } else if(importMeta && importMeta.fileName){
     const when = importMeta.importedAt ? new Date(importMeta.importedAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     document.getElementById('importMessage').textContent = `Dados salvos no navegador · última importação: ${importMeta.fileName}${when ? ' em '+when : ''}.`;
   }
 }catch(err){
   console.error('Primarização · falha na inicialização', err);
 }
+
+/* Relógio do prazo: recalcula tempo restante, situação, KPIs e filtros a cada virada de minuto */
+function tickPrazos(){
+  if(document.hidden) return;
+  const pop = document.getElementById('prazoPopover');
+  if(pop && pop.classList.contains('show')) return; // não fecha o popup enquanto está aberto
+  refreshSituacaoNow();
+  [renderKpiRow, renderMiniKpis, renderAnalytics, renderTable, renderLateTable, renderNotifications].forEach(step => {
+    try{ step(); }catch(err){ console.error('Primarização · falha ao atualizar prazos', step.name, err); }
+  });
+}
+setTimeout(() => { tickPrazos(); setInterval(tickPrazos, 60000); }, 60000 - (Date.now() % 60000) + 200);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) tickPrazos(); });
 
 /* exclusão de serviços por lista suspensa */
 document.getElementById('btnExcludeService').addEventListener('click', () => {
