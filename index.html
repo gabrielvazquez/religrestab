@@ -483,6 +483,40 @@
   .form-modal{ width:100%; max-width:440px; background:var(--white); border-radius:16px; box-shadow:0 30px 70px rgba(10,14,30,.35); padding:22px 24px; max-height:88vh; overflow-y:auto; }
   .form-modal h3{ margin:0 0 16px; font-size:16px; font-weight:800; }
   .form-modal textarea{ width:100%; padding:10px 12px; border:1px solid var(--gray-300); border-radius:9px; font-size:13.5px; outline:none; font-family:inherit; resize:vertical; min-height:64px; }
+
+  /* ================= MELHORIAS: OS vista, OS Urgente, Etypa ================= */
+  tr.os-visited > td{ background:#F1F5F9; color:var(--gray-500); }
+  tr.os-visited .addr-main{ color:var(--gray-700); }
+  tr.os-visited td.mono{ color:var(--gray-500); }
+  .visited-flag{
+    display:inline-block; font-size:10px; font-weight:700; letter-spacing:.02em;
+    color:#15803D; background:var(--green-soft); border:1px solid #BBF7D0;
+    border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle;
+  }
+  .check-cell{ width:38px; text-align:center; }
+  .check-cell input{ width:16px; height:16px; cursor:pointer; accent-color:var(--orange); }
+  .check-inline{
+    display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600;
+    color:var(--gray-700); background:var(--white); border:1px solid var(--gray-300);
+    border-radius:9px; padding:7px 11px; cursor:pointer; white-space:nowrap;
+  }
+  .check-inline input{ width:15px; height:15px; accent-color:var(--orange); cursor:pointer; }
+  .btn-danger{ background:var(--red); border-color:var(--red); color:#fff; }
+  .btn-danger:hover{ background:#B91C1C; border-color:#B91C1C; color:#fff; }
+  .btn-mini{ padding:4px 9px; font-size:11.5px; border-radius:8px; }
+  .row-actions-cell{ width:96px; text-align:right; white-space:nowrap; }
+  .nav-section-gap{ margin-top:18px; }
+  .etypa-tag{
+    display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; color:#6D28D9; background:#F3E8FF; border:1px solid #DDD6FE;
+    border-radius:999px; padding:3px 10px; margin-bottom:8px;
+  }
+  .brand-etypa{ color:#6D28D9; }
+  .simple-bar-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .simple-bar-label{ width:150px; font-size:12px; color:var(--gray-700); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .simple-bar-track{ flex:1; height:9px; background:var(--gray-100); border-radius:999px; overflow:hidden; }
+  .simple-bar-fill{ height:100%; border-radius:999px; background:var(--orange); }
+  .simple-bar-val{ width:38px; text-align:right; font-size:12px; font-weight:700; color:var(--gray-900); }
 </style>
 </head>
 <body>
@@ -547,9 +581,27 @@
         Em Atraso
         <span class="nav-badge" id="badgeLate">0</span>
       </a>
+      <button class="nav-item" data-tab="urgente">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>
+        OS Urgente
+        <span class="nav-badge" id="badgeUrgente">0</span>
+      </button>
       <button class="nav-item" data-tab="admin" data-admin-only="1" style="display:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 6v6c0 5.2 3.6 9.3 9 10 5.4-.7 9-4.8 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg>
         Administração
+      </button>
+    </nav>
+
+    <div class="side-label nav-section-gap">ETYPA</div>
+    <nav class="nav" id="navMenuEtypa">
+      <button class="nav-item" data-tab="etypa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v16"/></svg>
+        Visão Geral Etypa
+      </button>
+      <button class="nav-item" data-tab="etypaordens">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>
+        Ordens Etypa
+        <span class="nav-badge" id="badgeEtypa">0</span>
       </button>
     </nav>
 
@@ -712,6 +764,8 @@
               <option value="semprazo">Sem prazo definido</option>
             </select>
             <button class="btn" id="btnClearFilters" type="button">Limpar filtros</button>
+            <button class="btn" id="btnClearVisited" type="button" title="Remove a marcação verde das OS que você já abriu">Limpar marcações</button>
+            <span class="result-count" id="visitedCount"></span>
             <span class="result-count" id="resultCount"></span>
           </div>
           <div class="table-wrap">
@@ -890,6 +944,132 @@
           </div>
         </div>
         <div class="import-note">Administradores podem importar planilhas e gerenciar usuários. Perfis de Visualização só acompanham os dados.</div>
+      </div>
+
+      <!-- ===================== OS URGENTE TAB ===================== -->
+      <div id="tab-urgente" class="tab-pane" style="display:none;">
+        <div class="page-head">
+          <div>
+            <div class="page-title">🚨 OS Urgente</div>
+            <div class="page-sub">Marque as ordens que não interessam e remova da lista — sobra só o que precisa ser atendido agora</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn" id="btnUrgentExport" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="urgentSearch" placeholder="Buscar OS, endereço, bairro...">
+            </div>
+            <select class="filter-select" id="urgentFilterRegiao"><option value="">Todas as regiões</option></select>
+            <select class="filter-select" id="urgentFilterServico"><option value="">Todos os serviços</option></select>
+            <label class="check-inline" title="Desmarque para trabalhar com todas as OS da base"><input type="checkbox" id="chkUrgentOnly" checked> Somente serviços de urgência</label>
+            <button class="btn" id="btnUrgentSelectAll" type="button">Marcar todas</button>
+            <button class="btn btn-danger" id="btnUrgentRemove" type="button">Remover marcadas</button>
+            <button class="btn" id="btnUrgentRestore" type="button">Restaurar removidas</button>
+            <span class="result-count" id="urgentCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr id="urgentTableHead"></tr></thead>
+              <tbody id="urgentTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="urgentEmptyState" style="display:none;">Nenhuma OS nesta lista. Use "Restaurar removidas" ou desmarque "Somente serviços de urgência".</div>
+        </div>
+      </div>
+
+      <!-- ===================== ETYPA · VISÃO GERAL ===================== -->
+      <div id="tab-etypa" class="tab-pane" style="display:none;">
+        <div class="page-head">
+          <div>
+            <div class="etypa-tag">Etypa</div>
+            <div class="page-title">Etypa · Visão Geral</div>
+            <div class="page-sub">Base independente do painel principal — os serviços da sua equipe não entram aqui</div>
+          </div>
+          <div class="head-actions">
+            <input class="upload-input" id="etypaFileImport" type="file" accept=".csv,.xlsx,.xls" multiple>
+            <button class="btn btn-primary" id="btnEtypaImport" data-admin-only="1" style="display:none;" title="Aceita CSV, XLSX e XLS">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+              Importar planilha Etypa
+            </button>
+          </div>
+          <div class="import-note" id="etypaImportMessage" aria-live="polite"></div>
+        </div>
+
+        <div class="kpi-card" id="etypaKpiRow"></div>
+
+        <div class="analytics-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Carga por equipe</div>
+                <div class="panel-sub">Quantidade de OS Etypa atribuídas a cada equipe</div>
+              </div>
+            </div>
+            <div id="etypaTeamBars"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Distribuição por região</div>
+                <div class="panel-sub">Volume de ordens Etypa por região</div>
+              </div>
+            </div>
+            <div id="etypaRegionBars"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ETYPA · ORDENS ===================== -->
+      <div id="tab-etypaordens" class="tab-pane" style="display:none;">
+        <div class="page-head">
+          <div>
+            <div class="etypa-tag">Etypa</div>
+            <div class="page-title">Etypa · Ordens de Serviço</div>
+            <div class="page-sub">Ordens importadas na base Etypa — filtre, ordene e exporte separadamente do painel principal</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn" id="btnEtypaExport" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="etypaSearch" placeholder="Buscar por OS, endereço, bairro...">
+            </div>
+            <select class="filter-select" id="etypaFilterRegiao"><option value="">Todas as regiões</option></select>
+            <select class="filter-select" id="etypaFilterServico"><option value="">Todos os serviços</option></select>
+            <select class="filter-select" id="etypaFilterStatus"><option value="">Todos os status</option></select>
+            <select class="filter-select" id="etypaFilterSituacao">
+              <option value="">Toda situação de prazo</option>
+              <option value="atraso">Em atraso</option>
+              <option value="24h">Vence em &lt;24h</option>
+              <option value="ok">No prazo</option>
+              <option value="semprazo">Sem prazo definido</option>
+            </select>
+            <button class="btn" id="btnEtypaClearFilters" type="button">Limpar filtros</button>
+            <span class="result-count" id="etypaResultCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr id="etypaTableHead"></tr></thead>
+              <tbody id="etypaTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="etypaEmptyState" style="display:none;">Nenhuma ordem na base Etypa. Importe uma planilha na Visão Geral Etypa.</div>
+        </div>
       </div>
 
       <div class="footer-note">Primarização · Painel interno de acompanhamento de religações e restabelecimentos · Dados extraídos do relatório operacional</div>
@@ -1395,7 +1575,7 @@ function renderMiniKpis(){
 
 function refreshDashboard(){
   refreshSituacaoNow();
-  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico];
+  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico, renderUrgentAll];
   steps.forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao renderizar', step.name, err); }
   });
@@ -1930,9 +2110,11 @@ function renderTable(){
     </tr>
   `;}).join('');
   tbody.querySelectorAll('tr').forEach(tr => {
-    tr.addEventListener('click', () => openDrawer(parseInt(tr.dataset.os,10)));
+    tr.addEventListener('click', () => { markVisited(tr.dataset.os); openDrawer(parseInt(tr.dataset.os,10)); });
   });
   bindPrazoPopovers(tbody);
+  applyVisitedAll(tbody);
+  updateVisitedCounter();
 }
 
 /* ---------------- equipes tab ---------------- */
@@ -2117,15 +2299,17 @@ function renderLateTable(){
     </tr>`).join('');
   const lateBody = document.getElementById('lateTableBody');
   lateBody.querySelectorAll('tr').forEach(tr => {
-    tr.addEventListener('click', () => openDrawer(parseInt(tr.dataset.os,10)));
+    tr.addEventListener('click', () => { markVisited(tr.dataset.os); openDrawer(parseInt(tr.dataset.os,10)); });
   });
   bindPrazoPopovers(lateBody);
+  applyVisitedAll(lateBody);
 }
 
 /* ---------------- drawer ---------------- */
 let currentModalOs = null;
 function openDrawer(osNum){
-  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum));
+  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum))
+    || (typeof ETYPA_FULL !== 'undefined' ? ETYPA_FULL.find(d => String(d.os) === String(osNum)) : null);
   if(!r) return;
   currentModalOs = r.os;
   document.getElementById('osModalTitle').textContent = `OS ${r.os}`;
@@ -2199,7 +2383,8 @@ function bindPrazoPopovers(container){
   });
 }
 function openPrazoPopover(anchorEl, osNum){
-  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum));
+  const r = DATA_FULL.find(d => String(d.os) === String(osNum)) || DATA.find(d => String(d.os) === String(osNum))
+    || (typeof ETYPA_FULL !== 'undefined' ? ETYPA_FULL.find(d => String(d.os) === String(osNum)) : null);
   const pop = document.getElementById('prazoPopover');
   if(!r || !pop) return;
   const remain = computeRemaining(r.prazoExecucao);
@@ -2247,10 +2432,15 @@ function switchTab(tab){
   document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
   document.getElementById('tab-'+visibleTab).style.display = 'block';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração'};
+  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração', urgente:'OS Urgente', etypa:'Etypa · Visão Geral', etypaordens:'Etypa · Ordens de Serviço'};
   if(tab === 'historico'){ renderHistorico(); }
+  if(tab === 'urgente'){ renderUrgentAll(); }
+  if(tab === 'etypa'){ initEtypaFilters(); renderEtypaOverview(); }
+  if(tab === 'etypaordens'){ initEtypaFilters(); renderEtypaTable(); }
   if(tab === 'equipes'){ renderRanking(); }
-  document.getElementById('crumbCurrent').textContent = names[tab];
+  document.getElementById('crumbCurrent').textContent = names[tab] || 'Visão Geral';
+  const crumbRoot = document.querySelector('.crumbs span');
+  if(crumbRoot) crumbRoot.textContent = (tab === 'etypa' || tab === 'etypaordens') ? 'Etypa' : 'Primarização';
 }
 function openLateOrders(event){
   if(event) event.preventDefault();
@@ -2262,7 +2452,7 @@ function openLateOrders(event){
   }
   return false;
 }
-document.querySelectorAll('#navMenu .nav-item').forEach(button => {
+document.querySelectorAll('#navMenu .nav-item, #navMenuEtypa .nav-item').forEach(button => {
   if(button.dataset.tab === 'atraso') return;
   button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); switchTab(button.dataset.tab); });
 });
@@ -2285,12 +2475,474 @@ function exportRows(rows, filename){
 }
 document.getElementById('btnExportTable').addEventListener('click', () => exportRows(filteredRows(), 'ordens_servico_filtradas.csv'));
 
+/* =================================================================
+   MELHORIAS
+   1) Sinalização de OS já clicadas
+   2) Menu "OS Urgente" — seleção rápida para exclusão da lista
+   3) Menu "Etypa" — base e ordens totalmente separadas do painel principal
+   ================================================================= */
+
+/* ---------------- 1) OS já clicadas ---------------- */
+let visitedOs = new Set();
+try{
+  const savedVisited = JSON.parse(localStorage.getItem('primarizacao-os-vistas') || '[]');
+  if(Array.isArray(savedVisited)) visitedOs = new Set(savedVisited.map(String));
+}catch(err){}
+function saveVisitedOs(){
+  try{ localStorage.setItem('primarizacao-os-vistas', JSON.stringify([...visitedOs])); }catch(err){}
+}
+function isVisitedOs(os){ return visitedOs.has(String(os)); }
+function applyVisitedToRow(tr){
+  const visited = isVisitedOs(tr.dataset.os);
+  tr.classList.toggle('os-visited', visited);
+  const cell = tr.querySelector('td.mono');
+  if(!cell) return;
+  const flag = cell.querySelector('.visited-flag');
+  if(visited && !flag) cell.insertAdjacentHTML('beforeend', ' <span class="visited-flag">&#10003; vista</span>');
+  if(!visited && flag) flag.remove();
+}
+function applyVisitedAll(container){
+  (container || document).querySelectorAll('tr[data-os]').forEach(applyVisitedToRow);
+}
+function markVisited(os){
+  if(os === undefined || os === null || os === '') return;
+  visitedOs.add(String(os));
+  saveVisitedOs();
+  applyVisitedAll(document);
+  updateVisitedCounter();
+}
+function updateVisitedCounter(){
+  const el = document.getElementById('visitedCount');
+  if(el) el.textContent = visitedOs.size ? `${visitedOs.size} OS já abertas` : '';
+}
+function clearVisitedOs(){
+  visitedOs = new Set();
+  saveVisitedOs();
+  applyVisitedAll(document);
+  updateVisitedCounter();
+}
+
+/* ---------------- 2) OS Urgente ---------------- */
+const URGENT_TERMS = ['URGENCIA','URGENTE','EMERGENCIA','EMERGENCIAL'];
+function isUrgentService(servico){
+  const norm = normaliseText(servico);
+  return URGENT_TERMS.some(term => norm.includes(normaliseText(term)));
+}
+let urgentRemoved = new Set();
+try{
+  const savedUrgent = JSON.parse(localStorage.getItem('primarizacao-urgentes-removidas') || '[]');
+  if(Array.isArray(savedUrgent)) urgentRemoved = new Set(savedUrgent.map(String));
+}catch(err){}
+function saveUrgentRemoved(){
+  try{ localStorage.setItem('primarizacao-urgentes-removidas', JSON.stringify([...urgentRemoved])); }catch(err){}
+}
+let urgentSelected = new Set();
+let urgentFilters = {q:'', regiao:'', servico:'', somenteUrgencia:true};
+
+function urgentSourceRows(){
+  return DATA.filter(r => !urgentFilters.somenteUrgencia || isUrgentService(r.servico));
+}
+function urgentVisibleRows(){
+  return urgentSourceRows().filter(r => {
+    if(urgentRemoved.has(String(r.os))) return false;
+    if(urgentFilters.regiao && normaliseText(r.regiao) !== normaliseText(urgentFilters.regiao)) return false;
+    if(urgentFilters.servico && normaliseText(r.servico) !== normaliseText(urgentFilters.servico)) return false;
+    if(urgentFilters.q){
+      const hay = normaliseText(`${r.os} ${r.endereco} ${r.bairro} ${r.equipe} ${r.servico} ${r.regiao}`);
+      if(!hay.includes(normaliseText(urgentFilters.q))) return false;
+    }
+    return true;
+  });
+}
+function initUrgentFilters(){
+  const base = urgentSourceRows();
+  const regSel = document.getElementById('urgentFilterRegiao');
+  const servSel = document.getElementById('urgentFilterServico');
+  if(!regSel || !servSel) return;
+  const keepReg = regSel.value, keepServ = servSel.value;
+  regSel.innerHTML = '<option value="">Todas as regiões</option>';
+  [...new Set(base.map(r=>r.regiao).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(reg => {
+    const opt = document.createElement('option');
+    opt.value = reg; opt.textContent = titleCase(reg);
+    regSel.appendChild(opt);
+  });
+  servSel.innerHTML = '<option value="">Todos os serviços</option>';
+  [...new Set(base.map(r=>r.servico).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    servSel.appendChild(opt);
+  });
+  if([...regSel.options].some(o=>o.value===keepReg)) regSel.value = keepReg; else urgentFilters.regiao = '';
+  if([...servSel.options].some(o=>o.value===keepServ)) servSel.value = keepServ; else urgentFilters.servico = '';
+}
+function renderUrgentTable(){
+  const head = document.getElementById('urgentTableHead');
+  const body = document.getElementById('urgentTableBody');
+  if(!head || !body) return;
+  refreshSituacaoNow();
+  head.innerHTML = '<th class="check-cell"><input type="checkbox" id="urgentCheckAll" title="Marcar/desmarcar tudo"></th>'
+    + COLUMNS.map(c => `<th>${c.label}</th>`).join('') + '<th></th>';
+  const rows = urgentVisibleRows().sort((a,b) => {
+    const ta = parseDateTime(a.prazoExecucao), tb = parseDateTime(b.prazoExecucao);
+    if(!ta && !tb) return 0;
+    if(!ta) return 1;
+    if(!tb) return -1;
+    return ta - tb;
+  });
+  const visibleIds = new Set(rows.map(r=>String(r.os)));
+  urgentSelected = new Set([...urgentSelected].filter(id => visibleIds.has(id)));
+  document.getElementById('urgentEmptyState').style.display = rows.length ? 'none' : 'block';
+  const countEl = document.getElementById('urgentCount');
+  if(countEl) countEl.textContent = `${rows.length} OS na lista · ${urgentSelected.size} marcadas · ${urgentRemoved.size} removidas`;
+  const badge = document.getElementById('badgeUrgente');
+  if(badge) badge.textContent = rows.length;
+  body.innerHTML = rows.map(r => {
+    const own = isOwnTeam(r.equipe);
+    const checked = urgentSelected.has(String(r.os)) ? 'checked' : '';
+    return `
+    <tr data-os="${r.os}" class="${own?'own-team-row':''}">
+      <td class="check-cell"><input type="checkbox" data-urgent-check="${r.os}" ${checked}></td>
+      <td class="mono">${r.os}</td>
+      <td>${escapeHtml(r.servico)}</td>
+      <td>
+        <div class="addr-main">${escapeHtml(r.endereco)}${r.numero?', '+r.numero:''}</div>
+        <div class="addr-sub">${escapeHtml(r.bairro)}</div>
+      </td>
+      <td>${titleCase(r.regiao)}</td>
+      <td>${escapeHtml(titleCase(String(r.equipe).replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()))}</td>
+      <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
+      ${prazoCellHtml(r)}
+      <td>${situacaoBadge(r.situacao)}</td>
+      <td class="row-actions-cell"><button class="btn btn-mini" type="button" data-urgent-remove="${r.os}">Remover</button></td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('[data-urgent-check]').forEach(chk => {
+    chk.addEventListener('click', event => event.stopPropagation());
+    chk.addEventListener('change', () => {
+      const id = String(chk.dataset.urgentCheck);
+      if(chk.checked) urgentSelected.add(id); else urgentSelected.delete(id);
+      const c = document.getElementById('urgentCount');
+      if(c) c.textContent = `${rows.length} OS na lista · ${urgentSelected.size} marcadas · ${urgentRemoved.size} removidas`;
+    });
+  });
+  body.querySelectorAll('[data-urgent-remove]').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      urgentRemoved.add(String(btn.dataset.urgentRemove));
+      urgentSelected.delete(String(btn.dataset.urgentRemove));
+      saveUrgentRemoved();
+      renderUrgentTable();
+    });
+  });
+  body.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', () => { markVisited(tr.dataset.os); openDrawer(parseInt(tr.dataset.os,10)); });
+  });
+  const checkAll = document.getElementById('urgentCheckAll');
+  if(checkAll){
+    checkAll.checked = rows.length > 0 && urgentSelected.size === rows.length;
+    checkAll.addEventListener('change', () => {
+      if(checkAll.checked) rows.forEach(r => urgentSelected.add(String(r.os)));
+      else urgentSelected.clear();
+      renderUrgentTable();
+    });
+  }
+  bindPrazoPopovers(body);
+  applyVisitedAll(body);
+}
+function renderUrgentAll(){
+  initUrgentFilters();
+  renderUrgentTable();
+}
+function bindUrgentControls(){
+  const search = document.getElementById('urgentSearch');
+  if(search) search.oninput = debounce(e => { urgentFilters.q = e.target.value; renderUrgentTable(); }, 180);
+  const regSel = document.getElementById('urgentFilterRegiao');
+  if(regSel) regSel.onchange = e => { urgentFilters.regiao = e.target.value; renderUrgentTable(); };
+  const servSel = document.getElementById('urgentFilterServico');
+  if(servSel) servSel.onchange = e => { urgentFilters.servico = e.target.value; renderUrgentTable(); };
+  const onlyChk = document.getElementById('chkUrgentOnly');
+  if(onlyChk) onlyChk.onchange = e => { urgentFilters.somenteUrgencia = e.target.checked; urgentSelected.clear(); renderUrgentAll(); };
+  const selAll = document.getElementById('btnUrgentSelectAll');
+  if(selAll) selAll.onclick = () => {
+    const rows = urgentVisibleRows();
+    if(urgentSelected.size === rows.length) urgentSelected.clear();
+    else rows.forEach(r => urgentSelected.add(String(r.os)));
+    renderUrgentTable();
+  };
+  const btnRemove = document.getElementById('btnUrgentRemove');
+  if(btnRemove) btnRemove.onclick = () => {
+    if(!urgentSelected.size) return;
+    urgentSelected.forEach(id => urgentRemoved.add(id));
+    urgentSelected.clear();
+    saveUrgentRemoved();
+    renderUrgentTable();
+  };
+  const btnRestore = document.getElementById('btnUrgentRestore');
+  if(btnRestore) btnRestore.onclick = () => {
+    urgentRemoved.clear();
+    saveUrgentRemoved();
+    renderUrgentTable();
+  };
+  const btnExport = document.getElementById('btnUrgentExport');
+  if(btnExport) btnExport.onclick = () => exportRows(urgentVisibleRows(), 'os_urgentes.csv');
+  const btnClearVisited = document.getElementById('btnClearVisited');
+  if(btnClearVisited) btnClearVisited.onclick = clearVisitedOs;
+}
+
+/* ---------------- 3) Etypa (base separada) ---------------- */
+let ETYPA_FULL = [];
+try{
+  const savedEtypa = JSON.parse(localStorage.getItem('etypa-data-full') || 'null');
+  if(Array.isArray(savedEtypa) && savedEtypa.length) ETYPA_FULL = recomputeSituacao(savedEtypa);
+}catch(err){}
+let etypaMeta = {fileName:'', importedAt:''};
+try{ etypaMeta = JSON.parse(localStorage.getItem('etypa-import-meta') || 'null') || etypaMeta; }catch(err){}
+function saveEtypaData(){
+  try{
+    localStorage.setItem('etypa-data-full', JSON.stringify(ETYPA_FULL));
+    localStorage.setItem('etypa-import-meta', JSON.stringify(etypaMeta));
+  }catch(err){}
+}
+let etypaFilters = {regiao:'', status:'', servico:'', situacao:'', q:''};
+let etypaSortKey = 'dataInsercao', etypaSortDir = 'desc';
+
+function refreshEtypaSituacao(){
+  ETYPA_FULL.forEach(r => { r.situacao = parseResidual(null, r.prazoExecucao).cat; });
+}
+function etypaFilteredRows(){
+  return ETYPA_FULL.filter(r => {
+    if(etypaFilters.regiao && normaliseText(r.regiao) !== normaliseText(etypaFilters.regiao)) return false;
+    if(etypaFilters.status && normaliseText(r.status) !== normaliseText(etypaFilters.status)) return false;
+    if(etypaFilters.servico && normaliseText(r.servico) !== normaliseText(etypaFilters.servico)) return false;
+    if(etypaFilters.situacao && parseResidual(null, r.prazoExecucao).cat !== etypaFilters.situacao) return false;
+    if(etypaFilters.q){
+      const hay = normaliseText(`${r.os} ${r.endereco} ${r.bairro} ${r.equipe} ${r.servico} ${r.regiao}`);
+      if(!hay.includes(normaliseText(etypaFilters.q))) return false;
+    }
+    return true;
+  });
+}
+function initEtypaFilters(){
+  const regSel = document.getElementById('etypaFilterRegiao');
+  const statusSel = document.getElementById('etypaFilterStatus');
+  const servSel = document.getElementById('etypaFilterServico');
+  if(!regSel || !statusSel || !servSel) return;
+  regSel.innerHTML = '<option value="">Todas as regiões</option>';
+  [...new Set(ETYPA_FULL.map(r=>r.regiao).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(reg => {
+    const opt = document.createElement('option');
+    opt.value = reg; opt.textContent = titleCase(reg);
+    regSel.appendChild(opt);
+  });
+  statusSel.innerHTML = '<option value="">Todos os status</option>';
+  [...new Set(ETYPA_FULL.map(r=>r.status).filter(Boolean))].forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    statusSel.appendChild(opt);
+  });
+  servSel.innerHTML = '<option value="">Todos os serviços</option>';
+  [...new Set(ETYPA_FULL.map(r=>r.servico).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    servSel.appendChild(opt);
+  });
+  regSel.value = etypaFilters.regiao;
+  statusSel.value = etypaFilters.status;
+  servSel.value = etypaFilters.servico;
+}
+function simpleBars(entries, emptyMsg){
+  if(!entries.length) return `<div class="empty-state">${emptyMsg}</div>`;
+  const max = entries[0][1] || 1;
+  return entries.map(([name,count]) => `
+    <div class="simple-bar-row">
+      <div class="simple-bar-label" title="${escapeHtml(name)}">${escapeHtml(titleCase(String(name)))}</div>
+      <div class="simple-bar-track"><div class="simple-bar-fill" style="width:${Math.max(6,(count/max)*100)}%"></div></div>
+      <div class="simple-bar-val">${count}</div>
+    </div>`).join('');
+}
+function renderEtypaOverview(){
+  refreshEtypaSituacao();
+  const k = computeKpis(ETYPA_FULL);
+  const items = [
+    {label:'Total de OS Etypa', num:k.total, sub: etypaMeta.fileName ? `Origem: ${etypaMeta.fileName}` : 'nenhuma planilha importada', cls:''},
+    {label:'Despachadas', num:k.despachada, sub: k.total ? `${((k.despachada/k.total)*100).toFixed(0)}% do total` : '—', cls:'accent'},
+    {label:'Planejadas', num:k.planejada, sub:'aguardando despacho', cls:''},
+    {label:'Planejáveis', num:k.plannable, sub:'aguardando planejamento', cls:''},
+    {label:'Em atraso', num:k.atraso, sub: k.atraso ? 'requer priorização imediata' : 'nenhuma ordem vencida', cls: k.atraso ? 'bad':''},
+    {label:'Vencendo em <24h', num:k.h24, sub:'atenção ao prazo de execução', cls: k.h24 ? 'warn':''},
+  ];
+  const kpiWrap = document.getElementById('etypaKpiRow');
+  if(kpiWrap){
+    kpiWrap.innerHTML = items.map(it => `
+      <div class="kpi ${it.cls}">
+        <div class="kpi-top"><div class="kpi-num">${it.num}</div></div>
+        <div class="kpi-label">${it.label}</div>
+        <div class="kpi-sub ${it.cls==='bad'?'bad':it.cls==='warn'?'warn':''}">${it.sub}</div>
+      </div>`).join('');
+  }
+  const byTeam = {};
+  ETYPA_FULL.forEach(r => { const key = r.equipe || 'Sem equipe'; byTeam[key] = (byTeam[key]||0)+1; });
+  const teamBars = document.getElementById('etypaTeamBars');
+  if(teamBars) teamBars.innerHTML = simpleBars(Object.entries(byTeam).sort((a,b)=>b[1]-a[1]).slice(0,10), 'Nenhuma OS importada na base Etypa.');
+  const byRegion = {};
+  ETYPA_FULL.forEach(r => { const key = r.regiao || 'Não informada'; byRegion[key] = (byRegion[key]||0)+1; });
+  const regionBars = document.getElementById('etypaRegionBars');
+  if(regionBars) regionBars.innerHTML = simpleBars(Object.entries(byRegion).sort((a,b)=>b[1]-a[1]), 'Nenhuma OS importada na base Etypa.');
+  const badge = document.getElementById('badgeEtypa');
+  if(badge) badge.textContent = ETYPA_FULL.length;
+}
+function renderEtypaTable(){
+  const head = document.getElementById('etypaTableHead');
+  const body = document.getElementById('etypaTableBody');
+  if(!head || !body) return;
+  refreshEtypaSituacao();
+  head.innerHTML = COLUMNS.map(c => `
+    <th data-etypa-key="${c.key}">${c.label}${etypaSortKey===c.key ? `<span class="sort-arrow">${etypaSortDir==='asc'?'▲':'▼'}</span>` : ''}</th>`).join('');
+  head.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.etypaKey;
+      if(etypaSortKey === key){ etypaSortDir = etypaSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { etypaSortKey = key; etypaSortDir = 'asc'; }
+      renderEtypaTable();
+    });
+  });
+  const rows = etypaFilteredRows().sort((a,b) => {
+    let va = a[etypaSortKey], vb = b[etypaSortKey];
+    if(['prazoExecucao','dataInsercao','dataCompetencia'].includes(etypaSortKey)){
+      const ta = parseDateTime(va), tb = parseDateTime(vb);
+      if(!ta && !tb) return 0;
+      if(!ta) return 1;
+      if(!tb) return -1;
+      return etypaSortDir==='asc' ? ta - tb : tb - ta;
+    }
+    if(typeof va === 'string') va = va.toLowerCase();
+    if(typeof vb === 'string') vb = vb.toLowerCase();
+    if(va < vb) return etypaSortDir==='asc' ? -1 : 1;
+    if(va > vb) return etypaSortDir==='asc' ? 1 : -1;
+    return 0;
+  });
+  document.getElementById('etypaResultCount').textContent = `${rows.length} de ${ETYPA_FULL.length} ordens`;
+  document.getElementById('etypaEmptyState').style.display = rows.length ? 'none' : 'block';
+  body.innerHTML = rows.map(r => `
+    <tr data-os="${r.os}">
+      <td class="mono">${r.os}</td>
+      <td>${escapeHtml(r.servico)}</td>
+      <td>
+        <div class="addr-main">${escapeHtml(r.endereco)}${r.numero?', '+r.numero:''}</div>
+        <div class="addr-sub">${escapeHtml(r.bairro)}</div>
+      </td>
+      <td>${titleCase(r.regiao)}</td>
+      <td>${escapeHtml(titleCase(String(r.equipe)))}</td>
+      <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
+      ${prazoCellHtml(r)}
+      <td>${situacaoBadge(r.situacao)}</td>
+    </tr>`).join('');
+  body.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', () => { markVisited(tr.dataset.os); openDrawer(parseInt(tr.dataset.os,10)); });
+  });
+  bindPrazoPopovers(body);
+  applyVisitedAll(body);
+  const badge = document.getElementById('badgeEtypa');
+  if(badge) badge.textContent = ETYPA_FULL.length;
+}
+function renderEtypaAll(){
+  initEtypaFilters();
+  renderEtypaOverview();
+  renderEtypaTable();
+}
+function updateEtypaData(rows, fileName){
+  if(!rows.length) throw new Error('A planilha não possui linhas válidas.');
+  rows = dedupeRawRows(rows);
+  ETYPA_FULL = mapImportedRows(rows);
+  etypaMeta = {fileName, importedAt: new Date().toISOString()};
+  etypaFilters = {regiao:'', status:'', servico:'', situacao:'', q:''};
+  const searchEl = document.getElementById('etypaSearch');
+  if(searchEl) searchEl.value = '';
+  ['etypaFilterRegiao','etypaFilterStatus','etypaFilterServico','etypaFilterSituacao'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  saveEtypaData();
+  renderEtypaAll();
+  const semPrazo = ETYPA_FULL.filter(r => !parseDateTime(r.prazoExecucao)).length;
+  const msg = document.getElementById('etypaImportMessage');
+  if(msg){
+    msg.textContent = (semPrazo ? `${semPrazo} OS sem prazo reconhecido · ` : '')
+      + `${ETYPA_FULL.length} ordens importadas na base Etypa de ${fileName}.`;
+  }
+}
+function bindEtypaControls(){
+  const btnImport = document.getElementById('btnEtypaImport');
+  const fileInput = document.getElementById('etypaFileImport');
+  if(btnImport && fileInput){
+    btnImport.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', event => {
+      const files = [...event.target.files];
+      if(!files.length) return;
+      const msg = document.getElementById('etypaImportMessage');
+      const needsXlsx = files.some(f => !/\.csv$/i.test(f.name));
+      const proceed = () => {
+        if(msg) msg.textContent = 'Importando planilhas da base Etypa…';
+        Promise.all(files.map(readOneFile))
+          .then(rowsPerFile => {
+            const allRows = rowsPerFile.flat();
+            updateEtypaData(allRows, files.length > 1 ? `${files.length} planilhas` : files[0].name);
+          })
+          .catch(error => { if(msg) msg.textContent = `Não foi possível importar: ${error.message}`; })
+          .finally(() => { event.target.value = ''; });
+      };
+      if(needsXlsx){
+        if(msg) msg.textContent = 'Carregando leitor de planilhas…';
+        loadXlsxLib().then(proceed)
+          .catch(err => { if(msg) msg.textContent = err.message; event.target.value = ''; });
+      } else {
+        proceed();
+      }
+    });
+  }
+  const search = document.getElementById('etypaSearch');
+  if(search) search.oninput = debounce(e => { etypaFilters.q = e.target.value; renderEtypaTable(); }, 180);
+  const regSel = document.getElementById('etypaFilterRegiao');
+  if(regSel) regSel.onchange = e => { etypaFilters.regiao = e.target.value; renderEtypaTable(); };
+  const statusSel = document.getElementById('etypaFilterStatus');
+  if(statusSel) statusSel.onchange = e => { etypaFilters.status = e.target.value; renderEtypaTable(); };
+  const servSel = document.getElementById('etypaFilterServico');
+  if(servSel) servSel.onchange = e => { etypaFilters.servico = e.target.value; renderEtypaTable(); };
+  const sitSel = document.getElementById('etypaFilterSituacao');
+  if(sitSel) sitSel.onchange = e => { etypaFilters.situacao = e.target.value; renderEtypaTable(); };
+  const btnClear = document.getElementById('btnEtypaClearFilters');
+  if(btnClear) btnClear.onclick = () => {
+    etypaFilters = {regiao:'', status:'', servico:'', situacao:'', q:''};
+    ['etypaFilterRegiao','etypaFilterStatus','etypaFilterServico','etypaFilterSituacao','etypaSearch'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    renderEtypaTable();
+  };
+  const btnExport = document.getElementById('btnEtypaExport');
+  if(btnExport) btnExport.onclick = () => exportRows(etypaFilteredRows(), 'ordens_etypa.csv');
+  if(etypaMeta && etypaMeta.fileName){
+    const when = etypaMeta.importedAt ? new Date(etypaMeta.importedAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const msg = document.getElementById('etypaImportMessage');
+    if(msg) msg.textContent = `Base Etypa salva no navegador · última importação: ${etypaMeta.fileName}${when ? ' em '+when : ''}.`;
+  }
+}
+function initMelhorias(){
+  bindUrgentControls();
+  bindEtypaControls();
+  renderUrgentAll();
+  renderEtypaAll();
+  updateVisitedCounter();
+  applyVisitedAll(document);
+}
+
 /* ---------------- init ---------------- */
 try{
   initTableFilters();
   renderExcludedChips();
   renderExcludedTeamsChips();
   refreshDashboard();
+  initMelhorias();
   if(DATA_FULL.length && DATA_FULL.every(r => !parseDateTime(r.prazoExecucao))){
     const msg = document.getElementById('importMessage');
     if(msg) msg.textContent = 'Os dados salvos são de uma versão antiga e estão sem prazo. Importe a planilha novamente para calcular os prazos.';
@@ -2360,6 +3012,7 @@ document.getElementById('hamburgerBtn').addEventListener('click', () => {
 });
 document.getElementById('sidebarBackdrop').addEventListener('click', closeMobileSidebar);
 document.getElementById('navMenu').addEventListener('click', closeMobileSidebar);
+document.getElementById('navMenuEtypa') && document.getElementById('navMenuEtypa').addEventListener('click', closeMobileSidebar);
 
 /* ---------------- login gate ---------------- */
 function showApp(){
