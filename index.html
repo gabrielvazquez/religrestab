@@ -425,6 +425,9 @@
   .prim-config-hint{ font-size:11.5px; color:var(--gray-500); margin-top:6px; line-height:1.45; }
   .form-modal.wide{ max-width:560px; }
   .form-modal .field-label{ width:auto; }
+  .prim-active-pill{ margin-left:auto; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#1D4ED8; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:999px; padding:4px 6px 4px 10px; }
+  .prim-active-pill button{ border:none; background:#2563EB; color:#fff; font-size:11.5px; font-weight:700; border-radius:999px; padding:3px 9px; cursor:pointer; }
+  .prim-active-pill button:hover{ background:#1D4ED8; }
 
   /* ---------- OS modal (substitui o drawer lateral) ---------- */
   .os-modal-overlay{
@@ -690,6 +693,7 @@
     <div class="content">
       <div class="crumbs">
         <span>Primarização</span> <span>›</span> <span>Operações</span> <span>›</span> <b id="crumbCurrent">Visão Geral</b>
+        <span class="prim-active-pill" id="primActivePill" style="display:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c-2.6 3.3-5.5 7-5.5 10.2a5.5 5.5 0 0 0 11 0c0-3.2-2.9-6.9-5.5-10.2Z"/></svg> Somente Primarização · <span id="primHiddenCount"></span><button type="button" id="btnPrimActiveOff">mostrar tudo</button></span>
       </div>
 
       <!-- ===================== OVERVIEW TAB ===================== -->
@@ -1244,7 +1248,7 @@
 <div class="form-modal-overlay" id="primConfigOverlay">
   <div class="form-modal wide">
     <h3>Configurar filtro Primarização</h3>
-    <div class="prim-config-hint" style="margin-top:-8px;margin-bottom:10px;">Estes são os temas/serviços que aparecem quando você clica no botão <b>Primarização</b> em Ordens de Serviço. A OS entra no filtro quando o serviço é igual ao tema ou começa com ele.</div>
+    <div class="prim-config-hint" style="margin-top:-8px;margin-bottom:10px;">Estes são os temas/serviços que aparecem quando você clica no botão <b>Primarização</b> em Ordens de Serviço. A OS entra no filtro só quando o serviço tem exatamente o mesmo nome do tema.</div>
     <label class="field-label">Temas incluídos</label>
     <div class="prim-term-list" id="primTermList"></div>
     <label class="field-label">Incluir serviço da base</label>
@@ -1307,7 +1311,7 @@ function saveExcludedServiceTerms(){
 }
 function isServiceExcluded(servico){
   const norm = normaliseText(servico);
-  return excludedServiceTerms.some(term => norm.includes(normaliseText(term)));
+  return excludedServiceTerms.some(term => norm === normaliseText(term));
 }
 function applyServiceExclusions(rows){
   return rows.filter(r => !isServiceExcluded(r.servico));
@@ -1342,7 +1346,11 @@ function markTeamExclusionsDirty(){
   if(status){ status.textContent = 'Alterações não salvas'; status.className = 'save-status dirty'; }
 }
 function applyAllExclusions(rows){
-  return applyTeamExclusions(applyServiceExclusions(rows));
+  let out = applyTeamExclusions(applyServiceExclusions(rows));
+  if(typeof primarizationFilterActive !== 'undefined' && primarizationFilterActive){
+    out = out.filter(r => isPrimarizationService(r.servico));
+  }
+  return out;
 }
 
 /* ---------------- cadastro de equipes (equipes próprias) ---------------- */
@@ -1395,9 +1403,10 @@ function savePrimarizationTerms(){
   try{ localStorage.setItem('primarizacao-filtro-temas', JSON.stringify(PRIMARIZATION_SERVICE_TERMS)); }catch(err){}
 }
 let primarizationFilterActive = false;
+try{ primarizationFilterActive = localStorage.getItem('primarizacao-filtro-ativo') === '1'; }catch(err){}
 function isPrimarizationService(servico){
   const norm = normaliseText(servico);
-  return PRIMARIZATION_SERVICE_TERMS.some(term => norm === normaliseText(term) || norm.startsWith(normaliseText(term)));
+  return PRIMARIZATION_SERVICE_TERMS.some(term => norm === normaliseText(term));
 }
 
 /* ---------------- helpers ---------------- */
@@ -1707,6 +1716,7 @@ function refreshDashboard(){
   steps.forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao renderizar', step.name, err); }
   });
+  try{ updatePrimarizationIndicators(); }catch(err){}
 }
 
 /* ---------------- analytics (team bars + donut) ---------------- */
@@ -2563,6 +2573,7 @@ function switchTab(tab){
   const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração', urgente:'OS Urgente', etypa:'Etypa · Visão Geral', etypaordens:'Etypa · Ordens de Serviço', etypaatraso:'Etypa · OS em Atraso'};
   const isEtypaTab = String(tab).startsWith('etypa');
   document.body.classList.toggle('theme-etypa', isEtypaTab);
+  setTimeout(updatePrimarizationIndicators, 0);
   if(tab === 'historico'){ renderHistorico(); }
   if(tab === 'urgente'){ renderUrgentAll(); }
   if(tab === 'etypa'){ initEtypaFilters(); renderEtypaOverview(); }
@@ -2588,11 +2599,24 @@ document.querySelectorAll('#navMenu .nav-item, #navMenuEtypa .nav-item').forEach
   button.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); switchTab(button.dataset.tab); });
 });
 document.getElementById('btnClearFilters').addEventListener('click', clearTableFilters);
-document.getElementById('btnPrimarizationFilter').addEventListener('click', () => {
-  primarizationFilterActive = !primarizationFilterActive;
-  document.getElementById('btnPrimarizationFilter').classList.toggle('active', primarizationFilterActive);
-  renderTable();
-});
+function setPrimarizationFilter(on){
+  primarizationFilterActive = !!on;
+  try{ localStorage.setItem('primarizacao-filtro-ativo', primarizationFilterActive ? '1' : '0'); }catch(err){}
+  currentRegion = null;
+  tableFilters.regiao = ''; tableFilters.servico = '';
+  reapplyServiceExclusions();
+  updatePrimarizationIndicators();
+}
+function updatePrimarizationIndicators(){
+  const btn = document.getElementById('btnPrimarizationFilter');
+  if(btn) btn.classList.toggle('active', primarizationFilterActive);
+  const pill = document.getElementById('primActivePill');
+  if(pill) pill.style.display = (primarizationFilterActive && !String(activeTab).startsWith('etypa')) ? 'inline-flex' : 'none';
+  const hidden = document.getElementById('primHiddenCount');
+  if(hidden) hidden.textContent = primarizationFilterActive ? `${DATA.length} de ${applyTeamExclusions(applyServiceExclusions(DATA_FULL)).length} OS` : '';
+}
+document.getElementById('btnPrimarizationFilter').addEventListener('click', () => setPrimarizationFilter(!primarizationFilterActive));
+document.getElementById('btnPrimActiveOff').addEventListener('click', () => setPrimarizationFilter(false));
 
 /* ---------------- export buttons ---------------- */
 function exportRows(rows, filename){
@@ -3299,7 +3323,8 @@ function closePrimConfig(){
     savePrimarizationTerms();
     updatePrimarizationButton();
     closePrimConfig();
-    renderTable();
+    reapplyServiceExclusions();
+    updatePrimarizationIndicators();
   });
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closePrimConfig(); });
   updatePrimarizationButton();
