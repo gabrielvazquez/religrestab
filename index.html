@@ -176,6 +176,8 @@
   .kpi.accent .kpi-num{ color:var(--orange); }
   .kpi.bad .kpi-num{ color:var(--red); }
   .kpi.warn .kpi-num{ color:var(--amber); }
+  .kpi.reprog .kpi-num{ color:#7C3AED; }
+  .kpi.reprog .kpi-sub{ color:#7C3AED; }
 
   /* ---------- region panel ---------- */
   .panel{
@@ -216,6 +218,8 @@
   .mini-kpi.warn .mini-kpi-num{ color:var(--amber); }
   .mini-kpi.good{ background:var(--green-soft); }
   .mini-kpi.good .mini-kpi-num{ color:var(--green); }
+  .mini-kpi.reprog{ background:#F5F3FF; }
+  .mini-kpi.reprog .mini-kpi-num{ color:#7C3AED; }
 
   /* ---------- analytics row ---------- */
   .analytics-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:20px; margin-bottom:24px; }
@@ -234,7 +238,10 @@
   .legend-label{ flex:1; color:var(--gray-700); font-weight:500; }
   .legend-val{ font-weight:700; }
 
-  .donut-wrap{ display:flex; align-items:center; gap:22px; }
+  .donut-wrap{ display:flex; align-items:center; justify-content:center; gap:28px; flex:1; min-height:200px; }
+  .analytics-grid > .panel{ display:flex; flex-direction:column; }
+  .status-legend{ min-width:190px; }
+  .legend-pct{ font-size:11px; color:var(--gray-500); font-weight:600; width:38px; text-align:right; }
 
   /* ---------- table ---------- */
   .table-toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
@@ -274,6 +281,8 @@
   .badge-late{ background:var(--red-soft); color:var(--red); }
   .badge-24h{ background:var(--amber-soft); color:var(--amber); }
   .badge-ok{ background:var(--green-soft); color:var(--green); }
+  .badge-reprog{ background:#F3E8FF; color:#7C3AED; }
+  .badge-other{ background:var(--gray-100); color:var(--gray-700); }
 
   .exclude-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
   .exclude-row .toolbar-search{ max-width:280px; }
@@ -585,7 +594,7 @@
       <div class="brand-badge">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2s7 8.2 7 13a7 7 0 1 1-14 0c0-4.8 7-13 7-13Z" fill="white"/></svg>
       </div>
-      <div class="brand-name">Primariza<span>ção</span></div>
+      <div class="brand-name" id="brandName">Primariza<span>ção</span></div>
     </div>
 
     <div class="side-label">MENU</div>
@@ -744,7 +753,7 @@
               </div>
             </div>
             <div class="donut-wrap">
-              <svg id="donutSvg" width="140" height="140" viewBox="0 0 140 140"></svg>
+              <svg id="donutSvg" width="180" height="180" viewBox="0 0 140 140" style="flex:none"></svg>
               <div class="status-legend" id="statusLegend"></div>
             </div>
           </div>
@@ -768,7 +777,7 @@
             </button>
             <button class="btn" id="btnExportTable">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Exportar CSV
+              Exportar Excel
             </button>
           </div>
         </div>
@@ -997,7 +1006,7 @@
           <div class="head-actions">
             <button class="btn" id="btnUrgentExport" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Exportar CSV
+              Exportar Excel
             </button>
           </div>
         </div>
@@ -1079,7 +1088,7 @@
           <div class="head-actions">
             <button class="btn" id="btnEtypaExport" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Exportar CSV
+              Exportar Excel
             </button>
           </div>
         </div>
@@ -1141,7 +1150,7 @@
           <div class="head-actions">
             <button class="btn" id="btnEtypaLateExport" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Exportar CSV
+              Exportar Excel
             </button>
           </div>
         </div>
@@ -1500,11 +1509,34 @@ function prazoCellHtml(r){
     : '<span class="prazo-remain">Sem prazo definido</span>';
   return `<td class="mono"><div class="prazo-cell" data-prazo-os="${r.os}"><span class="prazo-date">${dateText}</span>${remainHtml}</div></td>`;
 }
+/* Status padronizado: aceita variações da planilha (maiúsculas, sem acento, "Reprogramada"...) */
+const STATUS_LABELS = {despachada:'Despachada', planejada:'Planejada', planejavel:'Planejável', reprogramavel:'Reprogramável'};
+function statusKey(status){
+  const n = String(status ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+  if(n.startsWith('despach')) return 'despachada';
+  if(n.startsWith('reprog')) return 'reprogramavel';
+  if(n.startsWith('planejav')) return 'planejavel';
+  if(n.startsWith('planej')) return 'planejada';
+  return 'outros';
+}
+function statusLabel(status){
+  return STATUS_LABELS[statusKey(status)] || (String(status ?? '').trim() || 'Sem status');
+}
+function statusOptionsHtml(rows){
+  const counts = {};
+  rows.forEach(r => { const l = statusLabel(r.status); counts[l] = (counts[l]||0)+1; });
+  const base = Object.values(STATUS_LABELS);
+  const extras = Object.keys(counts).filter(l => !base.includes(l)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  return '<option value="">Todos os status</option>' + [...base, ...extras]
+    .map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)} (${counts[l]||0})</option>`).join('');
+}
 function statusBadgeClass(status){
-  if(status === 'Despachada') return 'badge-dispatched';
-  if(status === 'Planejada') return 'badge-planned';
-  if(status === 'Planejável') return 'badge-plannable';
-  return 'badge-planned';
+  const k = statusKey(status);
+  if(k === 'despachada') return 'badge-dispatched';
+  if(k === 'planejada') return 'badge-planned';
+  if(k === 'planejavel') return 'badge-plannable';
+  if(k === 'reprogramavel') return 'badge-reprog';
+  return 'badge-other';
 }
 function situacaoBadge(cat){
   if(cat === 'atraso') return '<span class="badge badge-late">Em atraso</span>';
@@ -1620,23 +1652,28 @@ let activeTab = 'overview';
 
 /* ---------------- KPI computation ---------------- */
 function computeKpis(rows){
-  return {
-    total: rows.length,
-    despachada: rows.filter(r=>r.status==='Despachada').length,
-    planejada: rows.filter(r=>r.status==='Planejada').length,
-    plannable: rows.filter(r=>r.status==='Planejável').length,
-    atraso: rows.filter(r=>r.situacao==='atraso').length,
-    h24: rows.filter(r=>r.situacao==='24h').length,
-  };
+  const k = {total: rows.length, despachada:0, planejada:0, plannable:0, reprogramavel:0, outros:0, atraso:0, h24:0};
+  rows.forEach(r => {
+    const sk = statusKey(r.status);
+    if(sk === 'despachada') k.despachada++;
+    else if(sk === 'planejada') k.planejada++;
+    else if(sk === 'planejavel') k.plannable++;
+    else if(sk === 'reprogramavel') k.reprogramavel++;
+    else k.outros++;
+    if(r.situacao === 'atraso') k.atraso++;
+    else if(r.situacao === '24h') k.h24++;
+  });
+  return k;
 }
 
 function renderKpiRow(){
   const k = computeKpis(DATA);
   const items = [
     {label:'Total de OS', num:k.total, sub:`${ALL_REGIONS.length} regiões monitoradas`, cls:''},
-    {label:'Despachadas', num:k.despachada, sub:`${((k.despachada/k.total)*100).toFixed(0)}% do total`, cls:'accent'},
+    {label:'Despachadas', num:k.despachada, sub: k.total ? `${((k.despachada/k.total)*100).toFixed(0)}% do total` : '—', cls:'accent'},
     {label:'Planejadas', num:k.planejada, sub:'aguardando despacho', cls:''},
     {label:'Planejáveis', num:k.plannable, sub:'aguardando planejamento', cls:''},
+    {label:'Reprogramáveis', num:k.reprogramavel, sub:'aguardando reprogramação', cls: k.reprogramavel ? 'reprog':''},
     {label:'Em atraso', num:k.atraso, sub: k.atraso ? 'requer priorização imediata' : 'nenhuma ordem vencida', cls: k.atraso ? 'bad':''},
     {label:'Vencendo em <24h', num:k.h24, sub:'atenção ao prazo de execução', cls: k.h24 ? 'warn':''},
   ];
@@ -1701,6 +1738,7 @@ function renderMiniKpis(){
     {label:'< 24H', val:k.h24, cls: k.h24?'warn':'good'},
     {label:'PLANEJADA', val:k.planejada, cls:''},
     {label:'PLANEJÁVEL', val:k.plannable, cls:''},
+    {label:'REPROGRAMÁVEL', val:k.reprogramavel, cls: k.reprogramavel ? 'reprog':''},
     {label:'DESPACHADA', val:k.despachada, cls:'good'},
   ];
   document.getElementById('miniKpiRow').innerHTML = cells.map(c => `
@@ -1745,6 +1783,8 @@ function renderAnalytics(){
     {label:'Despachada', val:k.despachada, color:'#16A34A'},
     {label:'Planejada', val:k.planejada, color:'#2563EB'},
     {label:'Planejável', val:k.plannable, color:'#D97706'},
+    {label:'Reprogramável', val:k.reprogramavel, color:'#7C3AED'},
+    {label:'Outros status', val:k.outros, color:'#94A3B8'},
   ].filter(s=>s.val>0);
   drawDonut(segs, k.total);
 
@@ -1753,6 +1793,7 @@ function renderAnalytics(){
       <span class="legend-dot" style="background:${s.color}"></span>
       <span class="legend-label">${s.label}</span>
       <span class="legend-val">${s.val}</span>
+      <span class="legend-pct">${k.total ? Math.round((s.val/k.total)*100) : 0}%</span>
     </div>`).join('') + (segs.length===0 ? '<div class="empty-state">Sem dados</div>' : '');
 }
 
@@ -1762,11 +1803,12 @@ function drawDonut(segs, total){
   const circumference = 2*Math.PI*r;
   let offset = 0;
   let paths = '';
-  if(total === 0){
+  const segTotal = segs.reduce((a,s)=>a+s.val,0);
+  if(total === 0 || segTotal === 0){
     paths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E9ECF0" stroke-width="${sw}"/>`;
   } else {
     segs.forEach(s => {
-      const frac = s.val/total;
+      const frac = s.val/segTotal;
       const len = frac*circumference;
       paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
         stroke-dasharray="${len} ${circumference-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
@@ -1900,12 +1942,8 @@ function initTableFilters(){
     regSel.appendChild(opt);
   });
   const statusSel = document.getElementById('filterStatus');
-  statusSel.innerHTML = '<option value="">Todos os status</option>';
-  [...new Set(DATA.map(r=>r.status))].forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    statusSel.appendChild(opt);
-  });
+  statusSel.innerHTML = statusOptionsHtml(DATA);
+  statusSel.value = tableFilters.status || '';
   const servicoSel = document.getElementById('filterServico');
   servicoSel.innerHTML = '<option value="">Todos os serviços</option>';
   [...new Set(DATA.map(r=>r.servico).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(s => {
@@ -2175,7 +2213,7 @@ function filteredRows(){
   return DATA.filter(r => {
     if(primarizationFilterActive && !isPrimarizationService(r.servico)) return false;
     if(tableFilters.regiao && normaliseText(r.regiao) !== normaliseText(tableFilters.regiao)) return false;
-    if(tableFilters.status && normaliseText(r.status) !== normaliseText(tableFilters.status)) return false;
+    if(tableFilters.status && statusLabel(r.status) !== tableFilters.status) return false;
     if(tableFilters.servico && normaliseText(r.servico) !== normaliseText(tableFilters.servico)) return false;
     if(tableFilters.situacao && parseResidual(null, r.prazoExecucao).cat !== tableFilters.situacao) return false;
     if(tableFilters.q){
@@ -2573,6 +2611,8 @@ function switchTab(tab){
   const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração', urgente:'OS Urgente', etypa:'Etypa · Visão Geral', etypaordens:'Etypa · Ordens de Serviço', etypaatraso:'Etypa · OS em Atraso'};
   const isEtypaTab = String(tab).startsWith('etypa');
   document.body.classList.toggle('theme-etypa', isEtypaTab);
+  const brandEl = document.getElementById('brandName');
+  if(brandEl) brandEl.innerHTML = isEtypaTab ? 'ETY<span>PA</span>' : 'Primariza<span>ção</span>';
   setTimeout(updatePrimarizationIndicators, 0);
   if(tab === 'historico'){ renderHistorico(); }
   if(tab === 'urgente'){ renderUrgentAll(); }
@@ -2619,16 +2659,182 @@ document.getElementById('btnPrimarizationFilter').addEventListener('click', () =
 document.getElementById('btnPrimActiveOff').addEventListener('click', () => setPrimarizationFilter(false));
 
 /* ---------------- export buttons ---------------- */
-function exportRows(rows, filename){
-  const mapped = rows.map(r => ({
-    'Número OS': r.os, 'Região': titleCase(r.regiao), 'Serviço': r.servico, 'Status': r.status,
-    'Equipe': r.equipe, 'Endereço': r.endereco, 'Número': r.numero, 'Bairro': r.bairro,
-    'Prazo de Execução': fmtDateFull(r.prazoExecucao), 'Tempo Restante': computeRemaining(r.prazoExecucao)?.label || 'Sem prazo definido',
-    'Situação': ({atraso:'Em atraso','24h':'Vence em <24h',ok:'No prazo',semprazo:'Sem prazo'})[parseResidual(null, r.prazoExecucao).cat],
-  }));
-  downloadCSV(mapped, filename);
+/* ===== Exportação: planilha Excel (.xlsx) formatada, gerada no próprio navegador (sem internet) ===== */
+const SIT_ORDER = {atraso:0, '24h':1, ok:2, semprazo:3};
+const SIT_TEXT = {atraso:'Em atraso', '24h':'Vence em <24h', ok:'No prazo', semprazo:'Sem prazo'};
+function sortRowsForExport(rows){
+  return rows.map(r => ({r, p: parseResidual(null, r.prazoExecucao)}))
+    .sort((a,b) => (SIT_ORDER[a.p.cat]-SIT_ORDER[b.p.cat]) || ((a.p.hours ?? Infinity) - (b.p.hours ?? Infinity)))
+    .map(x => x.r);
 }
-document.getElementById('btnExportTable').addEventListener('click', () => exportRows(filteredRows(), 'ordens_servico_filtradas.csv'));
+function xmlEsc(v){
+  return String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function colLetter(i){ let s=''; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(bytes){ let c = 0xFFFFFFFF; for(let i=0;i<bytes.length;i++) c = CRC_TABLE[(c^bytes[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){
+  const enc = new TextEncoder(); const chunks = []; const central = []; let offset = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name); const data = enc.encode(f.data); const crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint16(8,0,true);
+    h.setUint16(10,0,true); h.setUint16(12,0x21,true); h.setUint32(14,crc,true);
+    h.setUint32(18,data.length,true); h.setUint32(22,data.length,true); h.setUint16(26,name.length,true); h.setUint16(28,0,true);
+    chunks.push(new Uint8Array(h.buffer), name, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(10,0,true);
+    c.setUint16(12,0,true); c.setUint16(14,0x21,true); c.setUint32(16,crc,true); c.setUint32(20,data.length,true); c.setUint32(24,data.length,true);
+    c.setUint16(28,name.length,true); c.setUint32(42,offset,true);
+    central.push(new Uint8Array(c.buffer), name);
+    offset += 30 + name.length + data.length;
+  });
+  const cdSize = central.reduce((a,b)=>a+b.length,0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true);
+  e.setUint32(12,cdSize,true); e.setUint32(16,offset,true);
+  return new Blob([...chunks, ...central, new Uint8Array(e.buffer)], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function buildStyledXlsx(rows, opts){
+  const theme = opts.theme || '1D4ED8', themeSoft = opts.themeSoft || 'EFF6FF';
+  // fontes: 0 normal | 1 título | 2 subtítulo | 3 cabeçalho | 4 atraso | 5 <24h | 6 no prazo | 7 sem prazo | 8 resumo
+  const fonts = [
+    '<font><sz val="10"/><color rgb="FF1F2937"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="15"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>',
+    '<font><i/><sz val="9"/><color rgb="FF6B7280"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="10"/><color rgb="FFB91C1C"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="10"/><color rgb="FF92400E"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="10"/><color rgb="FF166534"/><name val="Calibri"/></font>',
+    '<font><sz val="10"/><color rgb="FF6B7280"/><name val="Calibri"/></font>',
+    '<font><b/><sz val="10"/><color rgb="FF1F2937"/><name val="Calibri"/></font>',
+  ];
+  const fillColors = [null, null, theme, 'FEE2E2', 'FEF3C7', 'FFFFFF', 'F8FAFC', 'F3F4F6', themeSoft];
+  const fills = fillColors.map((c,i) => i===0 ? '<fill><patternFill patternType="none"/></fill>'
+    : i===1 ? '<fill><patternFill patternType="gray125"/></fill>'
+    : `<fill><patternFill patternType="solid"><fgColor rgb="FF${c}"/><bgColor indexed="64"/></patternFill></fill>`);
+  const FILL = {theme:2, atraso:3, '24h':4, white:5, zebra:6, semprazo:7, soft:8};
+  const borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>',
+    '<border><left style="thin"><color rgb="FFE5E7EB"/></left><right style="thin"><color rgb="FFE5E7EB"/></right><top style="thin"><color rgb="FFE5E7EB"/></top><bottom style="thin"><color rgb="FFE5E7EB"/></bottom><diagonal/></border>'];
+  const xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>']; const xfMap = {};
+  const st = (font, fill, border, h, wrap) => {
+    const key = [font,fill,border,h||'',wrap?1:0].join('|');
+    if(xfMap[key] !== undefined) return xfMap[key];
+    xfs.push(`<xf numFmtId="0" fontId="${font}" fillId="${fill}" borderId="${border}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"${h?` horizontal="${h}"`:''}${wrap?' wrapText="1"':''}/></xf>`);
+    return xfMap[key] = xfs.length-1;
+  };
+  const headers = ['Nº OS','Situação','Tempo restante','Prazo de execução','Serviço','Status','Região','Equipe','Endereço','Bairro','Município'];
+  const widths  = [14, 15, 24, 18, 40, 15, 15, 32, 42, 22, 15];
+  const nCols = headers.length, last = colLetter(nCols-1);
+  const counts = {atraso:0,'24h':0,ok:0,semprazo:0};
+  const prepared = rows.map(r => { const cat = parseResidual(null, r.prazoExecucao).cat; counts[cat]++; return {r, cat}; });
+  const out = []; const merges = []; const heights = {};
+  const cell = (ref, v, s) => `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+  const fullRow = (rowNum, text, s) => { const cs=[cell('A'+rowNum, text, s)]; for(let i=1;i<nCols;i++) cs.push(`<c r="${colLetter(i)}${rowNum}" s="${s}"/>`); merges.push(`A${rowNum}:${last}${rowNum}`); return cs.join(''); };
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  out.push(`<row r="1" ht="30" customHeight="1">${fullRow(1, opts.title, st(1, FILL.theme, 0, 'left'))}</row>`);
+  out.push(`<row r="2" ht="16" customHeight="1">${fullRow(2, `Gerado em ${now} · ${rows.length} ordens${opts.filtersText ? ' · Filtros: '+opts.filtersText : ''}`, st(2, FILL.soft, 0, 'left'))}</row>`);
+  const sumParts = [['Em atraso', counts.atraso, 4, FILL.atraso], ['Vencem em <24h', counts['24h'], 5, FILL['24h']], ['No prazo', counts.ok, 6, FILL.white], ['Sem prazo', counts.semprazo, 7, FILL.semprazo]];
+  const sumCells = []; let ci = 0;
+  sumParts.forEach(([label, val, font, fill]) => {
+    sumCells.push(cell(colLetter(ci)+'3', label, st(8, fill, 1, 'left')));
+    sumCells.push(cell(colLetter(ci+1)+'3', String(val), st(font, fill, 1, 'center')));
+    ci += 2;
+  });
+  out.push(`<row r="3" ht="20" customHeight="1">${sumCells.join('')}</row>`);
+  out.push(`<row r="5" ht="22" customHeight="1">${headers.map((h,i)=>cell(colLetter(i)+'5', h, st(3, FILL.theme, 1, 'center'))).join('')}</row>`);
+  let rowNum = 6, zebra = false, prevCat = null;
+  prepared.forEach(({r, cat}) => {
+    if(cat !== prevCat){ zebra = false; prevCat = cat; }
+    const fill = cat === 'atraso' ? FILL.atraso : cat === '24h' ? FILL['24h'] : cat === 'semprazo' ? FILL.semprazo : (zebra ? FILL.zebra : FILL.white);
+    zebra = !zebra;
+    const sitFont = cat === 'atraso' ? 4 : cat === '24h' ? 5 : cat === 'ok' ? 6 : 7;
+    const normal = st(0, fill, 1, null), center = st(0, fill, 1, 'center'), sit = st(sitFont, fill, 1, 'center'), sitLeft = st(sitFont, fill, 1, 'left');
+    const vals = [
+      [String(r.os), center], [SIT_TEXT[cat], sit], [computeRemaining(r.prazoExecucao)?.label || 'Sem prazo definido', sitLeft],
+      [r.prazoExecucao ? fmtDateFull(r.prazoExecucao) : '—', center], [r.servico || '', normal], [statusLabel(r.status), center],
+      [titleCase(String(r.regiao||'')), normal], [titleCase(String(r.equipe||'').replace('PRIMARIZAÇÃO -','').replace('PRIMARIZAÇÃO-','').trim()), normal],
+      [`${r.endereco||''}${r.numero ? ', '+r.numero : ''}${r.complemento ? ' '+r.complemento : ''}`, normal], [r.bairro || '', normal], [r.municipio || '', normal],
+    ];
+    out.push(`<row r="${rowNum}" ht="18" customHeight="1">${vals.map(([v,s],i)=>cell(colLetter(i)+rowNum, v, s)).join('')}</row>`);
+    rowNum++;
+  });
+  const lastRow = Math.max(5, rowNum-1);
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>
+<dimension ref="A1:${last}${lastRow}"/>
+<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A6" sqref="A6"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="15"/>
+<cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols>
+<sheetData>${out.join('')}</sheetData>
+<autoFilter ref="A5:${last}${lastRow}"/>
+<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join('')}</mergeCells>
+<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>
+<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>
+</worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="${fonts.length}">${fonts.join('')}</fonts>
+<fills count="${fills.length}">${fills.join('')}</fills>
+<borders count="${borders.length}">${borders.join('')}</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+  const sheetName = xmlEsc((opts.sheetName || 'Ordens').slice(0,31));
+  const files = [
+    {name:'[Content_Types].xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
+    {name:'_rels/.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:'xl/workbook.xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${sheetName}" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'${sheetName}'!$A$5:$${last}$${lastRow}</definedName><definedName name="_xlnm.Print_Titles" localSheetId="0">'${sheetName}'!$5:$5</definedName></definedNames></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml', data:styles},
+    {name:'xl/worksheets/sheet1.xml', data:sheet},
+  ];
+  return zipStore(files);
+}
+function describeMainFilters(){
+  const parts = [];
+  if(primarizationFilterActive) parts.push('Somente Primarização');
+  if(tableFilters.regiao) parts.push('Região '+titleCase(tableFilters.regiao));
+  if(tableFilters.servico) parts.push('Serviço '+tableFilters.servico);
+  if(tableFilters.status) parts.push('Status '+tableFilters.status);
+  if(tableFilters.situacao) parts.push(SIT_TEXT[tableFilters.situacao] || tableFilters.situacao);
+  if(tableFilters.q) parts.push(`Busca "${tableFilters.q}"`);
+  return parts.join(' · ');
+}
+function exportRows(rows, filename, opts){
+  opts = opts || {};
+  const isEtypa = String(activeTab).startsWith('etypa');
+  const sorted = sortRowsForExport(rows);
+  try{
+    const blob = buildStyledXlsx(sorted, {
+      title: opts.title || (isEtypa ? 'ETYPA · Ordens de Serviço' : 'Relig/Restab · Ordens de Serviço'),
+      filtersText: opts.filtersText || '',
+      sheetName: opts.sheetName || (isEtypa ? 'Etypa' : 'Ordens'),
+      theme: isEtypa ? 'B91C1C' : '1D4ED8', themeSoft: isEtypa ? 'FEF2F2' : 'EFF6FF',
+    });
+    const stamp = new Date().toISOString().slice(0,10);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename.replace(/\.(csv|xlsx)$/i,'') + '_' + stamp + '.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }catch(err){
+    console.error('Falha ao gerar Excel, exportando CSV', err);
+    downloadCSV(sorted.map(r => ({'Número OS': r.os, 'Situação': SIT_TEXT[parseResidual(null, r.prazoExecucao).cat], 'Tempo Restante': computeRemaining(r.prazoExecucao)?.label || 'Sem prazo definido',
+      'Prazo de Execução': fmtDateFull(r.prazoExecucao), 'Serviço': r.servico, 'Status': statusLabel(r.status), 'Região': titleCase(String(r.regiao||'')),
+      'Equipe': r.equipe, 'Endereço': r.endereco, 'Número': r.numero, 'Bairro': r.bairro})), filename.replace(/\.xlsx$/i,'.csv'));
+  }
+}
+document.getElementById('btnExportTable').addEventListener('click', () => exportRows(filteredRows(), 'ordens_servico_filtradas', {
+  title: activeTab === 'atraso' ? 'Relig/Restab · Ordens em Atraso' : 'Relig/Restab · Ordens de Serviço', filtersText: describeMainFilters()
+}));
 
 /* =================================================================
    MELHORIAS
@@ -2840,7 +3046,7 @@ function bindUrgentControls(){
     renderUrgentTable();
   };
   const btnExport = document.getElementById('btnUrgentExport');
-  if(btnExport) btnExport.onclick = () => exportRows(urgentVisibleRows(), 'os_urgentes.csv');
+  if(btnExport) btnExport.onclick = () => exportRows(urgentVisibleRows(), 'os_urgentes', {title:'Relig/Restab · OS Urgentes', sheetName:'OS Urgentes'});
   const btnClearVisited = document.getElementById('btnClearVisited');
   if(btnClearVisited) btnClearVisited.onclick = clearVisitedOs;
 }
@@ -2917,7 +3123,7 @@ function refreshEtypaSituacao(){
 function etypaFilteredRows(){
   return etypaRows().filter(r => {
     if(etypaFilters.regiao && normaliseText(r.regiao) !== normaliseText(etypaFilters.regiao)) return false;
-    if(etypaFilters.status && normaliseText(r.status) !== normaliseText(etypaFilters.status)) return false;
+    if(etypaFilters.status && statusLabel(r.status) !== etypaFilters.status) return false;
     if(etypaFilters.servico && normaliseText(r.servico) !== normaliseText(etypaFilters.servico)) return false;
     if(etypaFilters.situacao && parseResidual(null, r.prazoExecucao).cat !== etypaFilters.situacao) return false;
     if(etypaFilters.q){
@@ -2939,12 +3145,7 @@ function initEtypaFilters(){
     opt.value = reg; opt.textContent = titleCase(reg);
     regSel.appendChild(opt);
   });
-  statusSel.innerHTML = '<option value="">Todos os status</option>';
-  [...new Set(baseRows.map(r=>r.status).filter(Boolean))].forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    statusSel.appendChild(opt);
-  });
+  statusSel.innerHTML = statusOptionsHtml(baseRows);
   servSel.innerHTML = '<option value="">Todos os serviços</option>';
   [...new Set(baseRows.map(r=>r.servico).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(s => {
     const opt = document.createElement('option');
@@ -2984,6 +3185,7 @@ function renderEtypaOverview(){
     {label:'Despachadas', num:k.despachada, sub: k.total ? `${((k.despachada/k.total)*100).toFixed(0)}% do total` : '—', cls:'accent'},
     {label:'Planejadas', num:k.planejada, sub:'aguardando despacho', cls:''},
     {label:'Planejáveis', num:k.plannable, sub:'aguardando planejamento', cls:''},
+    {label:'Reprogramáveis', num:k.reprogramavel, sub:'aguardando reprogramação', cls: k.reprogramavel ? 'reprog':''},
     {label:'Em atraso', num:k.atraso, sub: k.atraso ? 'requer priorização imediata' : 'nenhuma ordem vencida', cls: k.atraso ? 'bad':''},
     {label:'Vencendo em <24h', num:k.h24, sub:'atenção ao prazo de execução', cls: k.h24 ? 'warn':''},
   ];
@@ -3200,9 +3402,9 @@ function bindEtypaControls(){
     renderEtypaTable();
   };
   const btnExport = document.getElementById('btnEtypaExport');
-  if(btnExport) btnExport.onclick = () => exportRows(etypaFilteredRows(), 'ordens_etypa.csv');
+  if(btnExport) btnExport.onclick = () => exportRows(etypaFilteredRows(), 'ordens_etypa', {title:'ETYPA · Ordens de Serviço'});
   const btnLateExport = document.getElementById('btnEtypaLateExport');
-  if(btnLateExport) btnLateExport.onclick = () => exportRows(etypaLateRows(), 'ordens_etypa_em_atraso.csv');
+  if(btnLateExport) btnLateExport.onclick = () => exportRows(etypaLateRows(), 'ordens_etypa_em_atraso', {title:'ETYPA · OS em Atraso', sheetName:'Etypa em atraso'});
   const lateSearch = document.getElementById('etypaLateSearch');
   if(lateSearch) lateSearch.oninput = debounce(e => { etypaLateFilters.q = e.target.value; renderEtypaLate(); }, 180);
   const lateReg = document.getElementById('etypaLateFilterRegiao');
