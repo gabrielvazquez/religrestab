@@ -2244,7 +2244,7 @@ document.getElementById('fileImport').addEventListener('change', event => {
   const needsXlsx = files.some(f => !/\.csv$/i.test(f.name));
   const proceed = () => {
     document.getElementById('importMessage').textContent = 'Importando planilhas…';
-    Promise.all(files.map(readOneFile))
+    Promise.all(files.slice().sort((a,b) => b.lastModified - a.lastModified).map(readOneFile))
       .then(rowsPerFile => {
         const allRows = rowsPerFile.flat();
         updateImportedData(allRows, files.length > 1 ? `${files.length} planilhas` : files[0].name);
@@ -3452,7 +3452,7 @@ function bindEtypaControls(){
       const needsXlsx = files.some(f => !/\.csv$/i.test(f.name));
       const proceed = () => {
         if(msg) msg.textContent = 'Importando planilhas da base Etypa…';
-        Promise.all(files.map(readOneFile))
+        Promise.all(files.slice().sort((a,b) => b.lastModified - a.lastModified).map(readOneFile))
           .then(rowsPerFile => {
             const allRows = rowsPerFile.flat();
             updateEtypaData(allRows, files.length > 1 ? `${files.length} planilhas` : files[0].name);
@@ -3705,14 +3705,15 @@ async function autoRun(manual){
     const files = await autoListFiles();
     if(!files.length) throw new Error('Nenhuma planilha (.xlsx, .xls, .csv) encontrada na pasta.');
     const signature = files.map(f => `${f.name}|${f.size}|${f.lastModified}`).join(';') + '>' + autoCfg.target;
-    autoCfg.lastFiles = files.map(f => `${f.name} · ${autoFmt(f.lastModified)}`);
+    autoCfg.lastFiles = files.slice().sort((a,b) => b.lastModified - a.lastModified).map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}`);
     if(!manual && autoCfg.onlyChanged && signature === autoCfg.lastSignature){
       autoCfg.lastRun = new Date().toISOString();
       autoSetResult(`Nenhum arquivo mudou desde a última importação (${files.length} planilha(s) verificadas).`, true);
       return;
     }
     if(files.some(f => !/\.csv$/i.test(f.name))) await loadXlsxLib();
-    const perFile = await Promise.all(files.map(f => readOneFile(f).catch(err => { throw new Error(`${f.name}: ${err.message}`); })));
+    const newestFirst = files.slice().sort((a,b) => b.lastModified - a.lastModified);
+    const perFile = await Promise.all(newestFirst.map(f => readOneFile(f).catch(err => { throw new Error(`${f.name}: ${err.message}`); })));
     const all = perFile.flat();
     if(!all.length) throw new Error('As planilhas da pasta estão vazias.');
     autoApplyRows(all, `${autoCfg.folderName || 'pasta'} (${files.length} planilha${files.length>1?'s':''})`);
@@ -3761,7 +3762,7 @@ function renderAutoUi(){
   if(autoCfg.lastResult) lines.push(`<span class="${autoCfg.lastOk ? 'ok' : 'err'}">${escapeHtml(autoCfg.lastResult)}</span>`);
   const files = (autoCfg.lastFiles || []);
   document.getElementById('autoStatus').innerHTML = lines.join('<br>') +
-    (files.length ? `<div class="auto-files"><b>Arquivos na pasta (${files.length}):</b><br>${files.map(escapeHtml).join('<br>')}</div>` : '');
+    (files.length ? `<div class="auto-files"><b>Arquivos na pasta (${files.length})</b> — da mais nova para a mais antiga; se a OS repetir, vale a da planilha mais nova:<br>${files.map(escapeHtml).join('<br>')}</div>` : '');
 }
 function openAutoModal(){ document.getElementById('autoOverlay').classList.add('show'); renderAutoUi(); }
 function closeAutoModal(){ document.getElementById('autoOverlay').classList.remove('show'); }
