@@ -1504,10 +1504,10 @@
     </div>
     <div class="auto-grid">
       <div>
-        <label class="field-label">Demais planilhas vão para</label>
+        <label class="field-label">Painel principal recebe</label>
         <select class="filter-select" id="autoTarget">
-          <option value="main">Painel principal (Relig/Restab)</option>
-          <option value="etypa">Base Etypa</option>
+          <option value="main">Todas, menos as exclusivas da Etypa</option>
+          <option value="etypa">Nada (só importar na Etypa)</option>
         </select>
       </div>
       <div>
@@ -1530,8 +1530,8 @@
     </div>
     <div class="auto-switch" style="margin-top:10px;">
       <div style="flex:1;min-width:0;">
-        <div class="auto-switch-title">Siglas que vão direto para a Etypa</div>
-        <div class="auto-switch-sub">Planilhas com estas siglas no nome entram na base Etypa (na Automação e no botão "Importar planilha")</div>
+        <div class="auto-switch-title">Siglas exclusivas da Etypa</div>
+        <div class="auto-switch-sub">A Etypa recebe <b>todas</b> as planilhas; as com estas siglas no nome entram <b>só</b> na Etypa, não no painel principal (vale para a Automação e o botão "Importar planilha")</div>
         <input class="field-input" id="autoEtypaSiglas" style="margin-top:8px;padding:7px 10px;font-size:12.5px;" placeholder="OCS">
       </div>
     </div>
@@ -2764,8 +2764,8 @@ document.getElementById('fileImport').addEventListener('change', event => {
   const proceed = () => {
     document.getElementById('importMessage').textContent = 'Importando planilhas…';
     const sorted = files.slice().sort((a,b) => b.lastModified - a.lastModified);
-    const etypaFiles = sorted.filter(f => isEtypaFile(f.name));
-    const mainFiles = sorted.filter(f => !isEtypaFile(f.name));
+    const etypaFiles = sorted;                                  // a Etypa recebe todas
+    const mainFiles = sorted.filter(f => !isEtypaFile(f.name));  // OCS fica só na Etypa
     Promise.all([Promise.all(mainFiles.map(readOneFile)), Promise.all(etypaFiles.map(readOneFile))])
       .then(([mainPer, etypaPer]) => {
         const label = arr => arr.length > 1 ? `${arr.length} planilhas` : arr[0].name;
@@ -2775,7 +2775,7 @@ document.getElementById('fileImport').addEventListener('change', event => {
           const msg = document.getElementById('importMessage');
           const etypaNote = `${etypaFiles.map(f=>f.name).join(', ')} → base Etypa (${ETYPA_FULL.length} OS).`;
           msg.textContent = mainFiles.length ? `${msg.textContent} · ${etypaNote}` : etypaNote;
-          showToast(`${etypaFiles.length} planilha(s) OCS enviada(s) para a Etypa`);
+          showToast(`${etypaFiles.length} planilha(s) importada(s) também na Etypa`);
         }
       })
       .catch(error => { document.getElementById('importMessage').textContent = `Não foi possível importar: ${error.message}`; })
@@ -4227,12 +4227,14 @@ function autoEtypaSiglaList(){
 }
 function isEtypaFile(name){ return autoEtypaSiglaList().some(sg => autoSiglaOf(name, sg)); }
 function autoRouteOf(f){ return isEtypaFile(f.name) ? 'etypa' : (autoCfg.target || 'main'); }
+/* destinos de um arquivo: a Etypa recebe todos; o painel principal recebe os que não são exclusivos da Etypa */
+function autoTargetsOf(f){ return autoRouteOf(f) === 'etypa' ? ['etypa'] : ['main', 'etypa']; }
 function autoDescribeFiles(files){
   const {selected, ignored, tags} = autoSelectFiles(files);
-  if(!autoCfg.bySigla) return selected.map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → Etypa' : ''}`);
+  if(!autoCfg.bySigla) return selected.map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → só Etypa' : ' → principal + Etypa'}`);
   const missing = autoSiglaList().filter(sg => ![...tags.values()].some(arr => arr.includes(sg)));
   return [
-    ...selected.map(f => `✓ [${tags.get(f).join('/')}] ${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → Etypa' : ''}`),
+    ...selected.map(f => `✓ [${tags.get(f).join('/')}] ${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → só Etypa' : ' → principal + Etypa'}`),
     ...missing.map(sg => `⚠ [${sg}] nenhuma planilha com essa sigla`),
     ...ignored.map(f => `✗ ignorada · ${f.name} · ${autoFmt(f.lastModified)}`),
   ];
@@ -4287,7 +4289,7 @@ async function autoRun(manual){
     if(files.some(f => !/\.csv$/i.test(f.name))) await loadXlsxLib();
     const newestFirst = files.slice().sort((a,b) => b.lastModified - a.lastModified);
     const groups = {main:[], etypa:[]};
-    newestFirst.forEach(f => groups[autoRouteOf(f)].push(f));
+    newestFirst.forEach(f => autoTargetsOf(f).forEach(t => groups[t].push(f)));
     const parts = [];
     for(const target of ['main','etypa']){
       const gFiles = groups[target];
