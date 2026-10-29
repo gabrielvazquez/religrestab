@@ -1531,6 +1531,14 @@
     <label class="check-inline" style="margin-top:10px;border:none;padding-left:2px;">
       <input type="checkbox" id="autoOnlyChanged" checked> Só reimportar quando algum arquivo da pasta mudar
     </label>
+    <div class="auto-switch" style="margin-top:6px;">
+      <div style="flex:1;min-width:0;">
+        <div class="auto-switch-title">Só a planilha mais recente de cada sigla</div>
+        <div class="auto-switch-sub">Reconhece a sigla no nome do arquivo e ignora as planilhas antigas e as sem sigla</div>
+        <input class="field-input" id="autoSiglas" style="margin-top:8px;padding:7px 10px;font-size:12.5px;" placeholder="OCS, OCMI, OCMM, OCMS, OCMJ, OCMT">
+      </div>
+      <label class="switch"><input type="checkbox" id="autoBySigla"><span></span></label>
+    </div>
     <div class="auto-warning" id="autoUnsupported" style="display:none;">
       Este navegador não permite acompanhar uma pasta (use <b>Google Chrome</b> ou <b>Microsoft Edge</b>). Você ainda pode importar a pasta manualmente: clique em <b>Escolher pasta</b> e depois em <b>Importar agora</b>.
     </div>
@@ -4133,7 +4141,8 @@ function closePrimConfig(){
    no navegador (IndexedDB); ao reabrir o painel pode ser preciso reautorizar.
 ================================================================= */
 const AUTO_SUPPORTED = typeof window.showDirectoryPicker === 'function';
-let autoCfg = {enabled:false, interval:10, target:'main', onlyChanged:true, folderName:'', lastRun:'', lastResult:'', lastOk:true, lastSignature:'', lastFiles:[]};
+const AUTO_DEFAULT_SIGLAS = 'OCS, OCMI, OCMM, OCMS, OCMJ, OCMT';
+let autoCfg = {enabled:false, interval:10, target:'main', onlyChanged:true, bySigla:true, siglas:AUTO_DEFAULT_SIGLAS, folderName:'', lastRun:'', lastResult:'', lastOk:true, lastSignature:'', lastFiles:[]};
 try{ autoCfg = Object.assign(autoCfg, JSON.parse(localStorage.getItem('relig-automacao') || '{}')); }catch(err){}
 function saveAutoCfg(){ try{ localStorage.setItem('relig-automacao', JSON.stringify(autoCfg)); }catch(err){} }
 let autoDirHandle = null, autoFallbackFiles = null, autoPermission = 'none', autoNextRun = 0, autoRunning = false;
@@ -4174,6 +4183,37 @@ async function autoListFiles(){
   if(autoFallbackFiles) return autoFallbackFiles;
   return [];
 }
+/* Escolhe só a planilha mais recente de cada sigla (OCS, OCMI...) reconhecida no nome do arquivo */
+function autoSiglaList(){
+  return String(autoCfg.siglas || AUTO_DEFAULT_SIGLAS).toUpperCase().split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+}
+function autoSiglaOf(name, sigla){
+  const up = String(name).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\.[A-Z0-9]+$/,'');
+  return new RegExp('(^|[^A-Z])' + sigla.replace(/[^A-Z0-9]/g,'') + '(?![A-Z])').test(up);
+}
+function autoSelectFiles(files){
+  const byDate = files.slice().sort((a,b) => b.lastModified - a.lastModified);
+  if(!autoCfg.bySigla) return {selected: byDate, ignored: [], tags: new Map()};
+  const tags = new Map(); const selected = [];
+  autoSiglaList().forEach(sigla => {
+    const newest = byDate.find(f => autoSiglaOf(f.name, sigla));
+    if(!newest) return;
+    if(!tags.has(newest)){ tags.set(newest, []); selected.push(newest); }
+    tags.get(newest).push(sigla);
+  });
+  selected.sort((a,b) => b.lastModified - a.lastModified);
+  return {selected, ignored: byDate.filter(f => !tags.has(f)), tags};
+}
+function autoDescribeFiles(files){
+  const {selected, ignored, tags} = autoSelectFiles(files);
+  if(!autoCfg.bySigla) return selected.map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}`);
+  const missing = autoSiglaList().filter(sg => ![...tags.values()].some(arr => arr.includes(sg)));
+  return [
+    ...selected.map(f => `✓ [${tags.get(f).join('/')}] ${f.name} · ${autoFmt(f.lastModified)}`),
+    ...missing.map(sg => `⚠ [${sg}] nenhuma planilha com essa sigla`),
+    ...ignored.map(f => `✗ ignorada · ${f.name} · ${autoFmt(f.lastModified)}`),
+  ];
+}
 function autoFmt(d){ return d ? new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'; }
 function autoScheduleNext(){ autoNextRun = autoCfg.enabled ? Date.now() + autoCfg.interval*60000 : 0; }
 
@@ -4210,10 +4250,12 @@ async function autoRun(manual){
   }
   autoRunning = true; renderAutoUi();
   try{
-    const files = await autoListFiles();
-    if(!files.length) throw new Error('Nenhuma planilha (.xlsx, .xls, .csv) encontrada na pasta.');
+    const allFiles = await autoListFiles();
+    if(!allFiles.length) throw new Error('Nenhuma planilha (.xlsx, .xls, .csv) encontrada na pasta.');
+    autoCfg.lastFiles = autoDescribeFiles(allFiles);
+    const files = autoSelectFiles(allFiles).selected;
+    if(!files.length) throw new Error(`Nenhuma planilha com as siglas ${autoSiglaList().join(', ')} no nome.`);
     const signature = files.map(f => `${f.name}|${f.size}|${f.lastModified}`).join(';') + '>' + autoCfg.target;
-    autoCfg.lastFiles = files.slice().sort((a,b) => b.lastModified - a.lastModified).map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}`);
     if(!manual && autoCfg.onlyChanged && signature === autoCfg.lastSignature){
       autoCfg.lastRun = new Date().toISOString();
       autoSetResult(`Nenhum arquivo mudou desde a última importação (${files.length} planilha(s) verificadas).`, true);
@@ -4228,7 +4270,8 @@ async function autoRun(manual){
     autoCfg.lastSignature = signature;
     autoCfg.lastRun = new Date().toISOString();
     const dest = autoCfg.target === 'etypa' ? 'base Etypa' : 'painel principal';
-    autoSetResult(`${manual ? 'Importação manual' : 'Importação automática'}: ${files.length} planilha(s), ${all.length} linhas lidas → ${dest}.`, true);
+    const ign = allFiles.length - files.length;
+    autoSetResult(`${manual ? 'Importação manual' : 'Importação automática'}: ${files.length} planilha(s), ${all.length} linhas lidas → ${dest}.${ign ? ` ${ign} antiga(s)/sem sigla ignorada(s).` : ''}`, true);
   }catch(err){
     autoCfg.lastRun = new Date().toISOString();
     autoSetResult(`Falha: ${err.message}`, false);
@@ -4262,6 +4305,10 @@ function renderAutoUi(){
   document.getElementById('autoTarget').value = autoCfg.target;
   document.getElementById('autoInterval').value = String(autoCfg.interval);
   document.getElementById('autoOnlyChanged').checked = !!autoCfg.onlyChanged;
+  document.getElementById('autoBySigla').checked = !!autoCfg.bySigla;
+  const sgEl = document.getElementById('autoSiglas');
+  if(document.activeElement !== sgEl) sgEl.value = autoCfg.siglas || AUTO_DEFAULT_SIGLAS;
+  sgEl.disabled = !autoCfg.bySigla;
   document.getElementById('btnAutoRunNow').disabled = autoRunning;
   const lines = [];
   if(autoDirHandle && autoPermission !== 'granted') lines.push('<span class="err">A pasta precisa ser reautorizada</span> — clique em "Importar agora" para liberar o acesso.');
@@ -4270,7 +4317,10 @@ function renderAutoUi(){
   if(autoCfg.lastResult) lines.push(`<span class="${autoCfg.lastOk ? 'ok' : 'err'}">${escapeHtml(autoCfg.lastResult)}</span>`);
   const files = (autoCfg.lastFiles || []);
   document.getElementById('autoStatus').innerHTML = lines.join('<br>') +
-    (files.length ? `<div class="auto-files"><b>Arquivos na pasta (${files.length})</b> — da mais nova para a mais antiga; se a OS repetir, vale a da planilha mais nova:<br>${files.map(escapeHtml).join('<br>')}</div>` : '');
+    (files.length ? `<div class="auto-files"><b>${autoCfg.bySigla ? 'Planilhas usadas (✓) e ignoradas (✗)' : `Arquivos na pasta (${files.length}) — se a OS repetir, vale a da planilha mais nova`}:</b><br>${files.map(f => {
+      const t = escapeHtml(f);
+      return f.startsWith('✓') ? `<span style="color:var(--green);font-weight:600">${t}</span>` : f.startsWith('⚠') ? `<span style="color:var(--amber);font-weight:600">${t}</span>` : f.startsWith('✗') ? `<span style="opacity:.6">${t}</span>` : t;
+    }).join('<br>')}</div>` : '');
 }
 function openAutoModal(){ document.getElementById('autoOverlay').classList.add('show'); renderAutoUi(); }
 function closeAutoModal(){ document.getElementById('autoOverlay').classList.remove('show'); }
@@ -4292,15 +4342,16 @@ function closeAutoModal(){ document.getElementById('autoOverlay').classList.remo
       autoCfg.folderName = handle.name; autoCfg.lastSignature = ''; autoCfg.lastFiles = [];
       await autoStoreHandle(handle);
       const files = await autoListFiles();
-      autoCfg.lastFiles = files.map(f => `${f.name} · ${autoFmt(f.lastModified)}`);
-      autoSetResult(`Pasta escolhida: ${files.length} planilha(s) encontrada(s).`, true);
+      autoCfg.lastFiles = autoDescribeFiles(files);
+      const sel = autoSelectFiles(files).selected.length;
+      autoSetResult(`Pasta escolhida: ${files.length} planilha(s) encontrada(s)${autoCfg.bySigla ? `, ${sel} será(ão) usada(s) (a mais recente de cada sigla)` : ''}.`, true);
     }catch(err){ if(err && err.name !== 'AbortError') autoSetResult(`Não foi possível abrir a pasta: ${err.message}`, false); }
   });
   document.getElementById('autoFallbackInput').addEventListener('change', e => {
     const files = [...e.target.files].filter(f => AUTO_FILE_RE.test(f.name) && !f.name.startsWith('~$') && !(f.webkitRelativePath||'').split('/').slice(1,-1).length);
     autoFallbackFiles = files; autoDirHandle = null;
     autoCfg.folderName = (e.target.files[0]?.webkitRelativePath || '').split('/')[0] || 'pasta';
-    autoCfg.lastFiles = files.map(f => `${f.name} · ${autoFmt(f.lastModified)}`);
+    autoCfg.lastFiles = autoDescribeFiles(files);
     autoSetResult(`Pasta carregada: ${files.length} planilha(s). Clique em "Importar agora".`, true);
     e.target.value = '';
   });
@@ -4314,6 +4365,15 @@ function closeAutoModal(){ document.getElementById('autoOverlay').classList.remo
     autoCfg.target = e.target.value; autoCfg.lastSignature = ''; saveAutoCfg(); renderAutoUi();
   });
   document.getElementById('autoOnlyChanged').addEventListener('change', e => { autoCfg.onlyChanged = e.target.checked; saveAutoCfg(); });
+  const refreshList = async () => {
+    try{ const files = await autoListFiles(); if(files.length) autoCfg.lastFiles = autoDescribeFiles(files); }catch(err){}
+    autoCfg.lastSignature = ''; saveAutoCfg(); renderAutoUi();
+  };
+  document.getElementById('autoBySigla').addEventListener('change', e => { autoCfg.bySigla = e.target.checked; refreshList(); });
+  document.getElementById('autoSiglas').addEventListener('change', e => {
+    autoCfg.siglas = String(e.target.value.trim() || AUTO_DEFAULT_SIGLAS).toUpperCase().split(/[\s,;]+/).filter(Boolean).join(', ');
+    refreshList();
+  });
   document.getElementById('btnAutoRunNow').addEventListener('click', () => autoRun(true));
   // relógio da automação (atualiza contagem e dispara no horário)
   setInterval(() => {
