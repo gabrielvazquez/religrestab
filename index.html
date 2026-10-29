@@ -1504,7 +1504,7 @@
     </div>
     <div class="auto-grid">
       <div>
-        <label class="field-label">Importar para</label>
+        <label class="field-label">Demais planilhas vão para</label>
         <select class="filter-select" id="autoTarget">
           <option value="main">Painel principal (Relig/Restab)</option>
           <option value="etypa">Base Etypa</option>
@@ -1527,6 +1527,13 @@
         <div class="auto-switch-sub">Liga/desliga a leitura da pasta no intervalo escolhido</div>
       </div>
       <label class="switch"><input type="checkbox" id="autoEnabled"><span></span></label>
+    </div>
+    <div class="auto-switch" style="margin-top:10px;">
+      <div style="flex:1;min-width:0;">
+        <div class="auto-switch-title">Siglas que vão direto para a Etypa</div>
+        <div class="auto-switch-sub">Planilhas com estas siglas no nome entram na base Etypa (na Automação e no botão "Importar planilha")</div>
+        <input class="field-input" id="autoEtypaSiglas" style="margin-top:8px;padding:7px 10px;font-size:12.5px;" placeholder="OCS">
+      </div>
     </div>
     <label class="check-inline" style="margin-top:10px;border:none;padding-left:2px;">
       <input type="checkbox" id="autoOnlyChanged" checked> Só reimportar quando algum arquivo da pasta mudar
@@ -2756,10 +2763,20 @@ document.getElementById('fileImport').addEventListener('change', event => {
   const needsXlsx = files.some(f => !/\.csv$/i.test(f.name));
   const proceed = () => {
     document.getElementById('importMessage').textContent = 'Importando planilhas…';
-    Promise.all(files.slice().sort((a,b) => b.lastModified - a.lastModified).map(readOneFile))
-      .then(rowsPerFile => {
-        const allRows = rowsPerFile.flat();
-        updateImportedData(allRows, files.length > 1 ? `${files.length} planilhas` : files[0].name);
+    const sorted = files.slice().sort((a,b) => b.lastModified - a.lastModified);
+    const etypaFiles = sorted.filter(f => isEtypaFile(f.name));
+    const mainFiles = sorted.filter(f => !isEtypaFile(f.name));
+    Promise.all([Promise.all(mainFiles.map(readOneFile)), Promise.all(etypaFiles.map(readOneFile))])
+      .then(([mainPer, etypaPer]) => {
+        const label = arr => arr.length > 1 ? `${arr.length} planilhas` : arr[0].name;
+        if(etypaFiles.length) updateEtypaData(etypaPer.flat(), label(etypaFiles));
+        if(mainFiles.length) updateImportedData(mainPer.flat(), label(mainFiles));
+        if(etypaFiles.length){
+          const msg = document.getElementById('importMessage');
+          const etypaNote = `${etypaFiles.map(f=>f.name).join(', ')} → base Etypa (${ETYPA_FULL.length} OS).`;
+          msg.textContent = mainFiles.length ? `${msg.textContent} · ${etypaNote}` : etypaNote;
+          showToast(`${etypaFiles.length} planilha(s) OCS enviada(s) para a Etypa`);
+        }
       })
       .catch(error => { document.getElementById('importMessage').textContent = `Não foi possível importar: ${error.message}`; })
       .finally(() => { event.target.value = ''; });
@@ -4142,7 +4159,7 @@ function closePrimConfig(){
 ================================================================= */
 const AUTO_SUPPORTED = typeof window.showDirectoryPicker === 'function';
 const AUTO_DEFAULT_SIGLAS = 'OCS, OCMI, OCMM, OCMS, OCMJ, OCMT';
-let autoCfg = {enabled:false, interval:10, target:'main', onlyChanged:true, bySigla:true, siglas:AUTO_DEFAULT_SIGLAS, folderName:'', lastRun:'', lastResult:'', lastOk:true, lastSignature:'', lastFiles:[]};
+let autoCfg = {enabled:false, interval:10, target:'main', onlyChanged:true, bySigla:true, siglas:AUTO_DEFAULT_SIGLAS, etypaSiglas:'OCS', folderName:'', lastRun:'', lastResult:'', lastOk:true, lastSignature:'', lastFiles:[]};
 try{ autoCfg = Object.assign(autoCfg, JSON.parse(localStorage.getItem('relig-automacao') || '{}')); }catch(err){}
 function saveAutoCfg(){ try{ localStorage.setItem('relig-automacao', JSON.stringify(autoCfg)); }catch(err){} }
 let autoDirHandle = null, autoFallbackFiles = null, autoPermission = 'none', autoNextRun = 0, autoRunning = false;
@@ -4204,12 +4221,18 @@ function autoSelectFiles(files){
   selected.sort((a,b) => b.lastModified - a.lastModified);
   return {selected, ignored: byDate.filter(f => !tags.has(f)), tags};
 }
+function autoEtypaSiglaList(){
+  const raw = (typeof autoCfg !== 'undefined' && autoCfg.etypaSiglas !== undefined) ? autoCfg.etypaSiglas : 'OCS';
+  return String(raw).toUpperCase().split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+}
+function isEtypaFile(name){ return autoEtypaSiglaList().some(sg => autoSiglaOf(name, sg)); }
+function autoRouteOf(f){ return isEtypaFile(f.name) ? 'etypa' : (autoCfg.target || 'main'); }
 function autoDescribeFiles(files){
   const {selected, ignored, tags} = autoSelectFiles(files);
-  if(!autoCfg.bySigla) return selected.map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}`);
+  if(!autoCfg.bySigla) return selected.map((f,i) => `${i===0?'★ ':''}${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → Etypa' : ''}`);
   const missing = autoSiglaList().filter(sg => ![...tags.values()].some(arr => arr.includes(sg)));
   return [
-    ...selected.map(f => `✓ [${tags.get(f).join('/')}] ${f.name} · ${autoFmt(f.lastModified)}`),
+    ...selected.map(f => `✓ [${tags.get(f).join('/')}] ${f.name} · ${autoFmt(f.lastModified)}${autoRouteOf(f) === 'etypa' ? ' → Etypa' : ''}`),
     ...missing.map(sg => `⚠ [${sg}] nenhuma planilha com essa sigla`),
     ...ignored.map(f => `✗ ignorada · ${f.name} · ${autoFmt(f.lastModified)}`),
   ];
@@ -4218,8 +4241,8 @@ function autoFmt(d){ return d ? new Date(d).toLocaleString('pt-BR',{day:'2-digit
 function autoScheduleNext(){ autoNextRun = autoCfg.enabled ? Date.now() + autoCfg.interval*60000 : 0; }
 
 /* Importa preservando filtros/aba/região, para não atrapalhar quem está usando o painel */
-function autoApplyRows(rows, label){
-  if(autoCfg.target === 'etypa'){
+function autoApplyRows(rows, label, target){
+  if((target || autoCfg.target) === 'etypa'){
     const keepE = {...etypaFilters}, keepL = {...etypaLateFilters};
     updateEtypaData(rows, label);
     etypaFilters = keepE; etypaLateFilters = keepL;
@@ -4255,7 +4278,7 @@ async function autoRun(manual){
     autoCfg.lastFiles = autoDescribeFiles(allFiles);
     const files = autoSelectFiles(allFiles).selected;
     if(!files.length) throw new Error(`Nenhuma planilha com as siglas ${autoSiglaList().join(', ')} no nome.`);
-    const signature = files.map(f => `${f.name}|${f.size}|${f.lastModified}`).join(';') + '>' + autoCfg.target;
+    const signature = files.map(f => `${f.name}|${f.size}|${f.lastModified}>${autoRouteOf(f)}`).join(';');
     if(!manual && autoCfg.onlyChanged && signature === autoCfg.lastSignature){
       autoCfg.lastRun = new Date().toISOString();
       autoSetResult(`Nenhum arquivo mudou desde a última importação (${files.length} planilha(s) verificadas).`, true);
@@ -4263,15 +4286,22 @@ async function autoRun(manual){
     }
     if(files.some(f => !/\.csv$/i.test(f.name))) await loadXlsxLib();
     const newestFirst = files.slice().sort((a,b) => b.lastModified - a.lastModified);
-    const perFile = await Promise.all(newestFirst.map(f => readOneFile(f).catch(err => { throw new Error(`${f.name}: ${err.message}`); })));
-    const all = perFile.flat();
-    if(!all.length) throw new Error('As planilhas da pasta estão vazias.');
-    autoApplyRows(all, `${autoCfg.folderName || 'pasta'} (${files.length} planilha${files.length>1?'s':''})`);
+    const groups = {main:[], etypa:[]};
+    newestFirst.forEach(f => groups[autoRouteOf(f)].push(f));
+    const parts = [];
+    for(const target of ['main','etypa']){
+      const gFiles = groups[target];
+      if(!gFiles.length) continue;
+      const perFile = await Promise.all(gFiles.map(f => readOneFile(f).catch(err => { throw new Error(`${f.name}: ${err.message}`); })));
+      const rows = perFile.flat();
+      if(!rows.length) throw new Error(`Planilha(s) vazia(s): ${gFiles.map(f=>f.name).join(', ')}`);
+      autoApplyRows(rows, `${autoCfg.folderName || 'pasta'} (${gFiles.map(f=>f.name).join(', ')})`, target);
+      parts.push(`${gFiles.length} planilha(s) → ${target === 'etypa' ? 'Etypa' : 'painel principal'} (${rows.length} linhas)`);
+    }
     autoCfg.lastSignature = signature;
     autoCfg.lastRun = new Date().toISOString();
-    const dest = autoCfg.target === 'etypa' ? 'base Etypa' : 'painel principal';
     const ign = allFiles.length - files.length;
-    autoSetResult(`${manual ? 'Importação manual' : 'Importação automática'}: ${files.length} planilha(s), ${all.length} linhas lidas → ${dest}.${ign ? ` ${ign} antiga(s)/sem sigla ignorada(s).` : ''}`, true);
+    autoSetResult(`${manual ? 'Importação manual' : 'Importação automática'}: ${parts.join(' · ')}.${ign ? ` ${ign} antiga(s)/sem sigla ignorada(s).` : ''}`, true);
   }catch(err){
     autoCfg.lastRun = new Date().toISOString();
     autoSetResult(`Falha: ${err.message}`, false);
@@ -4309,6 +4339,8 @@ function renderAutoUi(){
   const sgEl = document.getElementById('autoSiglas');
   if(document.activeElement !== sgEl) sgEl.value = autoCfg.siglas || AUTO_DEFAULT_SIGLAS;
   sgEl.disabled = !autoCfg.bySigla;
+  const esEl = document.getElementById('autoEtypaSiglas');
+  if(document.activeElement !== esEl) esEl.value = autoCfg.etypaSiglas ?? 'OCS';
   document.getElementById('btnAutoRunNow').disabled = autoRunning;
   const lines = [];
   if(autoDirHandle && autoPermission !== 'granted') lines.push('<span class="err">A pasta precisa ser reautorizada</span> — clique em "Importar agora" para liberar o acesso.');
@@ -4369,6 +4401,10 @@ function closeAutoModal(){ document.getElementById('autoOverlay').classList.remo
     try{ const files = await autoListFiles(); if(files.length) autoCfg.lastFiles = autoDescribeFiles(files); }catch(err){}
     autoCfg.lastSignature = ''; saveAutoCfg(); renderAutoUi();
   };
+  document.getElementById('autoEtypaSiglas').addEventListener('change', e => {
+    autoCfg.etypaSiglas = String(e.target.value).toUpperCase().split(/[\s,;]+/).filter(Boolean).join(', ');
+    refreshList();
+  });
   document.getElementById('autoBySigla').addEventListener('change', e => { autoCfg.bySigla = e.target.checked; refreshList(); });
   document.getElementById('autoSiglas').addEventListener('change', e => {
     autoCfg.siglas = String(e.target.value.trim() || AUTO_DEFAULT_SIGLAS).toUpperCase().split(/[\s,;]+/).filter(Boolean).join(', ');
