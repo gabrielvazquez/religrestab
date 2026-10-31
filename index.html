@@ -659,6 +659,18 @@
   .toast{ position:fixed; bottom:22px; left:50%; transform:translate(-50%, 20px); background:var(--ink); color:#fff; font-size:12.5px; font-weight:600;
           padding:10px 16px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:all .2s ease; z-index:200; }
   .toast.show{ opacity:1; transform:translate(-50%,0); }
+  /* ---------- SEM OP ---------- */
+  .badge-semop{ background:#ECFEFF; color:#0E7490; border:1px solid #A5F3FC; font-size:10.5px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+  .kpi.semop .kpi-num{ color:#0E7490; }
+  .semop-tag{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#0E7490; background:#ECFEFF; border:1px solid #A5F3FC; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+  .semop-chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; background:#ECFEFF; color:#0E7490; padding:5px 8px 5px 12px; border-radius:20px; border:1px solid #CFFAFE; }
+  .semop-chip button{ border:none; background:none; color:#0E7490; font-size:15px; line-height:1; cursor:pointer; padding:2px 4px; font-weight:800; }
+  .semop-sug{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .semop-sug button{ border:1px dashed #A5F3FC; background:#fff; color:#155E75; font-size:12px; font-weight:600; border-radius:20px; padding:5px 11px; cursor:pointer; }
+  .semop-sug button:hover{ background:#ECFEFF; }
+  .semop-setores{ display:flex; flex-wrap:wrap; gap:8px; }
+  .semop-setores label{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; border:1px solid var(--gray-300); border-radius:9px; padding:6px 11px; cursor:pointer; }
+  .semop-setores input{ accent-color:#0E7490; }
 </style>
 </head>
 <body>
@@ -727,6 +739,11 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>
         OS Urgente
         <span class="nav-badge" id="badgeUrgente">0</span>
+      </button>
+      <button class="nav-item" data-tab="semop">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+        SEM OP
+        <span class="nav-badge" id="badgeSemOp">0</span>
       </button>
       <button class="nav-item" data-tab="config">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
@@ -1158,6 +1175,69 @@
         <div class="import-note">Administradores podem importar planilhas e gerenciar usuários. Perfis de Visualização só acompanham os dados.</div>
       </div>
 
+      <!-- ===================== SEM OP ===================== -->
+      <div id="tab-semop" class="tab-pane" style="display:none;">
+        <div class="page-head">
+          <div>
+            <div class="semop-tag">Sem OP</div>
+            <div class="page-title">SEM OP</div>
+            <div class="page-sub">OS fora do padrão da primarização que caem nos nossos setores — também aparecem na aba principal e no filtro Primarização</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn" id="btnSemOpExport" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Exportar Excel</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Serviços SEM OP</div>
+              <div class="panel-sub">Escolha quais serviços das planilhas entram neste menu. Só contam as OS dos setores marcados.</div>
+            </div>
+          </div>
+          <div class="cfg-section-title" style="margin-top:0;">Setores</div>
+          <div class="semop-setores" id="semopSetores"></div>
+          <div class="cfg-section-title">Serviços incluídos</div>
+          <div class="exclude-chips" id="semopChips"></div>
+          <div class="manage-row" style="margin-top:12px;" data-admin-only="1">
+            <select class="filter-select" id="semopAddSelect"><option value="">Incluir serviço...</option></select>
+            <button class="btn" id="btnSemOpAdd" type="button">Incluir</button>
+          </div>
+          <div data-admin-only="1">
+            <div class="cfg-help" id="semopSugTitle" style="margin-top:4px;"></div>
+            <div class="semop-sug" id="semopSug"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="mini-kpi-row" id="semopSummary"></div>
+        </div>
+
+        <div class="panel">
+          <div class="table-toolbar">
+            <div class="toolbar-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="semopSearch" placeholder="Buscar OS, endereço, bairro..."></div>
+            <select class="filter-select" id="semopFilterRegiao"><option value="">Todos os setores</option></select>
+            <select class="filter-select" id="semopFilterServico"><option value="">Todos os serviços</option></select>
+            <select class="filter-select" id="semopFilterSituacao">
+              <option value="">Toda situação de prazo</option>
+              <option value="atraso">Em atraso</option>
+              <option value="24h">Vence em &lt;24h</option>
+              <option value="ok">No prazo</option>
+              <option value="semprazo">Sem prazo definido</option>
+            </select>
+            <span class="result-count" id="semopCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr id="semopTableHead"></tr></thead>
+              <tbody id="semopTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-more" id="semopTableMore"></div>
+          <div class="empty-state" id="semopEmpty" style="display:none;"></div>
+        </div>
+      </div>
+
       <!-- ===================== CONFIGURAÇÕES ===================== -->
       <div id="tab-config" class="tab-pane" style="display:none;">
         <div class="page-head">
@@ -1180,7 +1260,7 @@
             </div>
             <div class="cfg-row">
               <div><div class="cfg-label">Abrir o painel em</div><div class="cfg-help">Aba exibida ao entrar</div></div>
-              <select class="filter-select" id="cfgDefaultTab"><option value="overview">Visão Geral</option><option value="ordens">Ordens de Serviço</option><option value="atraso">Em Atraso</option><option value="urgente">OS Urgente</option><option value="historico">Histórico</option><option value="etypa">Visão Geral Etypa</option></select>
+              <select class="filter-select" id="cfgDefaultTab"><option value="overview">Visão Geral</option><option value="ordens">Ordens de Serviço</option><option value="atraso">Em Atraso</option><option value="urgente">OS Urgente</option><option value="semop">SEM OP</option><option value="historico">Histórico</option><option value="etypa">Visão Geral Etypa</option></select>
             </div>
           </div>
           <div class="panel">
@@ -1624,9 +1704,9 @@ try{ currentRole = localStorage.getItem('primarizacao-role') || 'viewer'; }catch
 
 /* ==================== CONFIGURAÇÕES DO PAINEL ==================== */
 const DEFAULT_CONFIG = {
-  kpis:{total:true, despachada:true, planejada:true, plannable:true, reprogramavel:true, atraso:true, h24:true},
+  kpis:{total:true, despachada:true, planejada:true, plannable:true, reprogramavel:true, atraso:true, h24:true, semop:true},
   teamBars:8, tableLimit:300, defaultTab:'overview', highlightOwn:true,
-  notif:{atraso:true, h24:true, reprog:true, urgente:true, etypa:true, importacao:true, automacao:true, desatualizada:true, staleHours:2, desktop:false}
+  notif:{atraso:true, h24:true, reprog:true, urgente:true, semop:true, etypa:true, importacao:true, automacao:true, desatualizada:true, staleHours:2, desktop:false}
 };
 let CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 try{
@@ -1640,6 +1720,24 @@ try{
 }catch(err){}
 function saveConfig(){ try{ localStorage.setItem('relig-config', JSON.stringify(CONFIG)); }catch(err){} }
 
+/* ==================== SEM OP ====================
+   Serviços fora do padrão da primarização que caem nos nossos setores.
+   Ficam num menu à parte e também entram na aba principal (mesmo se o
+   serviço estiver na lista de excluídos) e no filtro Primarização. */
+const SEMOP_DEFAULT_SETORES = ['IPIRANGA', 'SÃO MATEUS'];
+let SEMOP = {servicos:[], setores: SEMOP_DEFAULT_SETORES.slice()};
+try{
+  const sv = JSON.parse(localStorage.getItem('relig-semop') || 'null');
+  if(sv && typeof sv === 'object'){
+    if(Array.isArray(sv.servicos)) SEMOP.servicos = sv.servicos.filter(x => typeof x === 'string' && x.trim());
+    if(Array.isArray(sv.setores)) SEMOP.setores = sv.setores.filter(x => typeof x === 'string' && x.trim());
+  }
+}catch(err){}
+function saveSemOp(){ try{ localStorage.setItem('relig-semop', JSON.stringify(SEMOP)); }catch(err){} }
+function isSemOpSetor(regiao){ const n = normaliseText(regiao); return SEMOP.setores.some(s => normaliseText(s) === n); }
+function isSemOpServico(servico){ const n = normaliseText(servico); return SEMOP.servicos.some(s => normaliseText(s) === n); }
+function isSemOpRow(r){ return !!r && isSemOpServico(r.servico) && isSemOpSetor(r.regiao); }
+
 let excludedServiceTerms = [];
 try{ excludedServiceTerms = JSON.parse(localStorage.getItem('primarizacao-excluded-services') || '[]'); }catch(err){ excludedServiceTerms = []; }
 function saveExcludedServiceTerms(){
@@ -1650,7 +1748,7 @@ function isServiceExcluded(servico){
   return excludedServiceTerms.some(term => norm === normaliseText(term));
 }
 function applyServiceExclusions(rows){
-  return rows.filter(r => !isServiceExcluded(r.servico));
+  return rows.filter(r => !isServiceExcluded(r.servico) || isSemOpRow(r));
 }
 let serviceExclusionsDirty = false;
 function markServiceExclusionsDirty(){
@@ -1684,7 +1782,7 @@ function markTeamExclusionsDirty(){
 function applyAllExclusions(rows){
   let out = applyTeamExclusions(applyServiceExclusions(rows));
   if(typeof primarizationFilterActive !== 'undefined' && primarizationFilterActive){
-    out = out.filter(r => isPrimarizationService(r.servico));
+    out = out.filter(r => isPrimarizationService(r.servico) || isSemOpRow(r));
   }
   return out;
 }
@@ -2010,13 +2108,19 @@ function computeKpis(rows){
 function renderKpiRow(){
   const k = computeKpis(DATA);
   const items = kpiItems(k, `${ALL_REGIONS.length} regiões monitoradas`).filter(it => CONFIG.kpis[it.key] !== false);
+  const semopCount = DATA.filter(isSemOpRow).length;
   document.getElementById('kpiRow').innerHTML = items.map(it => `
     <div class="kpi ${it.cls}" data-go="${goAttr(it.go)}" title="Clique para ver estas ordens">
       <div class="kpi-top"><div class="kpi-num">${it.num}</div></div>
       <div class="kpi-label">${it.label}</div>
       <div class="kpi-sub ${it.cls==='bad'?'bad':it.cls==='warn'?'warn':''}">${it.sub}</div>
     </div>
-  `).join('');
+  `).join('') + (CONFIG.kpis.semop !== false && SEMOP.servicos.length ? `
+    <div class="kpi semop" data-tab-go="semop" style="cursor:pointer" title="Abrir o menu SEM OP">
+      <div class="kpi-top"><div class="kpi-num">${semopCount}</div></div>
+      <div class="kpi-label">SEM OP</div>
+      <div class="kpi-sub">${SEMOP.setores.map(titleCase).join(' · ')}</div>
+    </div>` : '');
   document.getElementById('badgeTotal').textContent = k.total;
   document.getElementById('badgeLate').textContent = k.atraso;
 }
@@ -2064,6 +2168,10 @@ function buildNotifications(){
     const hrs = (Date.now() - new Date(importMeta.importedAt).getTime())/3600000;
     if(hrs >= (Number(n.staleHours) || 2)) items.push({tone:'warn', ico:'⟳', title:'Base sem atualização', text:`Última importação ${fmtAgo(importMeta.importedAt)} (${importMeta.fileName || 'planilha'}).`,
       action:() => { switchTab('overview'); if(currentRole === 'admin'){ try{ openAutoModal(); }catch(err){} } }});
+  }
+  if(n.semop){
+    try{ const sl = semopRows().filter(r => r.situacao === 'atraso').length;
+      if(sl) items.push({tone:'bad', ico:'⦸', title:`SEM OP: ${sl} OS em atraso`, text:`Serviços fora do padrão em ${SEMOP.setores.map(titleCase).join(' e ')}.`, action:() => { semopFilters.situacao = 'atraso'; switchTab('semop'); }}); }catch(err){}
   }
   if(n.importacao){
     const last = histSnapshots().filter(sn => sn.kind === 'import').slice(-1)[0];
@@ -2174,7 +2282,7 @@ function renderMiniKpis(){
 
 function refreshDashboard(){
   refreshSituacaoNow();
-  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico, renderUrgentAll];
+  const steps = [renderKpiRow, renderRegionTabs, renderMiniKpis, renderAnalytics, renderTable, renderTeamsTable, renderLateTable, renderNotifications, renderRanking, renderHistorico, renderUrgentAll, renderSemOp];
   steps.forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao renderizar', step.name, err); }
   });
@@ -2827,7 +2935,7 @@ try {
 
 function filteredRows(){
   return DATA.filter(r => {
-    if(primarizationFilterActive && !isPrimarizationService(r.servico)) return false;
+    if(primarizationFilterActive && !isPrimarizationService(r.servico) && !isSemOpRow(r)) return false;
     if(tableFilters.regiao && normaliseText(r.regiao) !== normaliseText(tableFilters.regiao)) return false;
     if(tableFilters.status && statusLabel(r.status) !== tableFilters.status) return false;
     if(tableFilters.equipe && r.equipe !== tableFilters.equipe) return false;
@@ -2894,7 +3002,7 @@ function renderTable(){
     return `
     <tr data-os="${r.os}" class="${own?'own-team-row':''}">
       <td class="mono">${r.os}</td>
-      <td>${escapeHtml(r.servico)}</td>
+      <td>${escapeHtml(r.servico)}${isSemOpRow(r) ? '<span class="badge badge-semop">SEM OP</span>' : ''}</td>
       <td>
         <div class="addr-main">${escapeHtml(r.endereco)}${r.numero?', '+r.numero:''}</div>
         <div class="addr-sub">${escapeHtml(r.bairro)}</div>
@@ -3231,7 +3339,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
   document.getElementById('tab-'+visibleTab).style.display = 'block';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração', urgente:'OS Urgente', etypa:'Etypa · Visão Geral', etypaordens:'Etypa · Ordens de Serviço', etypaatraso:'Etypa · OS em Atraso', config:'Configurações'};
+  const names = {overview:'Visão Geral', ordens:'Ordens de Serviço', equipes:'Equipes', atraso:'Em Atraso', historico:'Histórico', admin:'Administração', urgente:'OS Urgente', etypa:'Etypa · Visão Geral', etypaordens:'Etypa · Ordens de Serviço', etypaatraso:'Etypa · OS em Atraso', config:'Configurações', semop:'SEM OP'};
   const isEtypaTab = String(tab).startsWith('etypa');
   document.body.classList.toggle('theme-etypa', isEtypaTab);
   const brandEl = document.getElementById('brandName');
@@ -3243,6 +3351,7 @@ function switchTab(tab){
   if(tab === 'etypaordens'){ initEtypaFilters(); renderEtypaTable(); }
   if(tab === 'etypaatraso'){ initEtypaFilters(); renderEtypaLate(); }
   if(tab === 'config'){ renderConfigUi(); }
+  if(tab === 'semop'){ renderSemOp(); }
   if(tab === 'equipes'){ renderRanking(); }
   document.getElementById('crumbCurrent').textContent = names[tab] || 'Visão Geral';
   const crumbRoot = document.querySelector('.crumbs span');
@@ -4437,6 +4546,129 @@ function closeAutoModal(){ document.getElementById('autoOverlay').classList.remo
   renderAutoUi();
 })();
 
+/* ---------------- SEM OP: menu ---------------- */
+let semopFilters = {regiao:'', servico:'', situacao:'', q:''};
+let semopExtra = 0;
+function semopRows(){
+  return applyTeamExclusions(DATA_FULL).filter(isSemOpRow).map(r => { r.situacao = parseResidual(null, r.prazoExecucao).cat; return r; });
+}
+function semopFilteredRows(){
+  return semopRows().filter(r => {
+    if(semopFilters.regiao && normaliseText(r.regiao) !== normaliseText(semopFilters.regiao)) return false;
+    if(semopFilters.servico && normaliseText(r.servico) !== normaliseText(semopFilters.servico)) return false;
+    if(semopFilters.situacao && r.situacao !== semopFilters.situacao) return false;
+    if(semopFilters.q){
+      const hay = normaliseText(`${r.os} ${r.endereco} ${r.bairro} ${r.equipe} ${r.servico} ${r.regiao}`);
+      if(!hay.includes(normaliseText(semopFilters.q))) return false;
+    }
+    return true;
+  }).sort((a,b) => (SIT_ORDER[a.situacao]-SIT_ORDER[b.situacao]) || ((parseResidual(null,a.prazoExecucao).hours ?? Infinity) - (parseResidual(null,b.prazoExecucao).hours ?? Infinity)));
+}
+function semopChanged(){
+  saveSemOp();
+  semopExtra = 0;
+  reapplyServiceExclusions();   // atualiza aba principal, KPIs e filtros
+  renderSemOp();
+}
+function renderSemOp(){
+  const badge = document.getElementById('badgeSemOp');
+  const all = semopRows();
+  if(badge) badge.textContent = all.length;
+  const pane = document.getElementById('tab-semop');
+  if(!pane || pane.style.display === 'none') return;
+  const isAdmin = currentRole === 'admin';
+  // setores
+  const regions = [...new Set([...DATA_FULL.map(r => r.regiao).filter(Boolean), ...SEMOP.setores])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('semopSetores').innerHTML = regions.map(reg => `<label><input type="checkbox" data-semop-setor="${escapeHtml(reg)}" ${isSemOpSetor(reg) ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}> ${escapeHtml(titleCase(reg))}</label>`).join('');
+  // serviços incluídos
+  const countInSector = {};
+  applyTeamExclusions(DATA_FULL).forEach(r => { if(isSemOpSetor(r.regiao) && r.servico) countInSector[r.servico] = (countInSector[r.servico]||0)+1; });
+  const countOf = sv => Object.entries(countInSector).filter(([k]) => normaliseText(k) === normaliseText(sv)).reduce((a,[,v])=>a+v,0);
+  document.getElementById('semopChips').innerHTML = SEMOP.servicos.length ? SEMOP.servicos.map((sv,i) => `
+    <span class="semop-chip">${escapeHtml(sv)} <b style="opacity:.7">(${countOf(sv)})</b>${isAdmin ? `<button type="button" data-semop-remove="${i}" title="Tirar do SEM OP">&times;</button>` : ''}</span>`).join('')
+    : '<span class="exclude-empty">Nenhum serviço escolhido ainda — inclua abaixo os serviços que são nossos mas não entram no padrão da primarização.</span>';
+  // opções para incluir: serviços nos setores, fora do padrão da primarização
+  const candidates = Object.entries(countInSector).filter(([sv]) => !isSemOpServico(sv) && !isPrimarizationService(sv)).sort((a,b) => b[1]-a[1]);
+  const sel = document.getElementById('semopAddSelect');
+  sel.innerHTML = '<option value="">Incluir serviço...</option>' + candidates.slice().sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([sv,c]) => `<option value="${escapeHtml(sv)}">${escapeHtml(sv)} (${c})</option>`).join('');
+  document.getElementById('semopSugTitle').textContent = candidates.length ? 'Mais frequentes nos setores (fora do padrão da primarização) — clique para incluir:' : '';
+  document.getElementById('semopSug').innerHTML = candidates.slice(0, 8).map(([sv,c]) => `<button type="button" data-semop-add="${escapeHtml(sv)}">+ ${escapeHtml(sv)} · ${c}</button>`).join('');
+  // resumo
+  const k = computeKpis(all);
+  const bySetor = SEMOP.setores.map(st => [st, all.filter(r => normaliseText(r.regiao) === normaliseText(st)).length]);
+  document.getElementById('semopSummary').innerHTML = [
+    {label:'TOTAL SEM OP', val:k.total, cls:'', f:{}},
+    {label:'EM ATRASO', val:k.atraso, cls:k.atraso?'bad':'good', f:{situacao:'atraso'}},
+    {label:'< 24H', val:k.h24, cls:k.h24?'warn':'good', f:{situacao:'24h'}},
+    ...bySetor.map(([st,v]) => ({label: st.toUpperCase(), val:v, cls:'', f:{regiao:st}})),
+  ].map(c => `<div class="mini-kpi ${c.cls}" data-semop-filter="${goAttr(c.f)}" style="cursor:pointer" title="Filtrar"><div class="mini-kpi-num">${c.val}</div><div class="mini-kpi-label">${escapeHtml(c.label)}</div></div>`).join('');
+  // filtros
+  const regSel = document.getElementById('semopFilterRegiao');
+  regSel.innerHTML = '<option value="">Todos os setores</option>' + SEMOP.setores.map(st => `<option value="${escapeHtml(st)}">${escapeHtml(titleCase(st))}</option>`).join('');
+  regSel.value = semopFilters.regiao;
+  const svSel = document.getElementById('semopFilterServico');
+  svSel.innerHTML = '<option value="">Todos os serviços</option>' + SEMOP.servicos.map(sv => `<option value="${escapeHtml(sv)}">${escapeHtml(sv)}</option>`).join('');
+  svSel.value = semopFilters.servico;
+  document.getElementById('semopFilterSituacao').value = semopFilters.situacao;
+  // tabela
+  const rows = semopFilteredRows();
+  document.getElementById('semopTableHead').innerHTML = COLUMNS.map(c => `<th>${c.label}</th>`).join('');
+  const shown = limitRows(rows, semopExtra);
+  renderTableMore('semopTableMore', shown.length, rows.length, (inf) => { semopExtra += (inf === Infinity ? Infinity : tableStep()); renderSemOp(); });
+  document.getElementById('semopCount').textContent = `${rows.length} de ${all.length} OS`;
+  const empty = document.getElementById('semopEmpty');
+  empty.style.display = rows.length ? 'none' : 'block';
+  empty.textContent = !SEMOP.servicos.length ? 'Escolha os serviços SEM OP acima para começar.' : all.length ? 'Nenhuma OS para esses filtros.' : 'Nenhuma OS desses serviços nos setores escolhidos na base atual.';
+  const body = document.getElementById('semopTableBody');
+  body.innerHTML = shown.map(r => `
+    <tr data-os="${r.os}">
+      <td class="mono">${r.os}</td>
+      <td>${escapeHtml(r.servico)}</td>
+      <td><div class="addr-main">${escapeHtml(r.endereco)}${r.numero?', '+r.numero:''}</div><div class="addr-sub">${escapeHtml(r.bairro)}</div></td>
+      <td>${titleCase(String(r.regiao||''))}</td>
+      <td>${escapeHtml(titleCase(shortTeam(r.equipe)))}</td>
+      <td><span class="badge ${statusBadgeClass(r.status)}">${escapeHtml(r.status)}</span></td>
+      ${prazoCellHtml(r)}
+      <td>${situacaoBadge(r.situacao)}</td>
+    </tr>`).join('');
+  body.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => { markVisited(tr.dataset.os); openDrawer(tr.dataset.os); }));
+  bindPrazoPopovers(body);
+  applyVisitedAll(body);
+}
+(function bindSemOp(){
+  const pane = document.getElementById('tab-semop');
+  if(!pane) return;
+  pane.addEventListener('click', e => {
+    const rm = e.target.closest('[data-semop-remove]');
+    if(rm){ SEMOP.servicos.splice(Number(rm.dataset.semopRemove), 1); semopChanged(); showToast('Serviço retirado do SEM OP'); return; }
+    const add = e.target.closest('[data-semop-add]');
+    if(add){ if(!isSemOpServico(add.dataset.semopAdd)) SEMOP.servicos.push(add.dataset.semopAdd); semopChanged(); showToast('Serviço incluído no SEM OP'); return; }
+    const f = e.target.closest('[data-semop-filter]');
+    if(f){ const o = JSON.parse(f.dataset.semopFilter || '{}'); semopFilters = {regiao:o.regiao||'', servico:'', situacao:o.situacao||'', q:semopFilters.q}; semopExtra = 0; renderSemOp(); }
+  });
+  pane.addEventListener('change', e => {
+    const t = e.target;
+    if(t.dataset.semopSetor !== undefined){
+      const reg = t.dataset.semopSetor;
+      SEMOP.setores = t.checked ? [...SEMOP.setores.filter(x => normaliseText(x) !== normaliseText(reg)), reg] : SEMOP.setores.filter(x => normaliseText(x) !== normaliseText(reg));
+      if(semopFilters.regiao && !isSemOpSetor(semopFilters.regiao)) semopFilters.regiao = '';
+      return semopChanged();
+    }
+    if(t.id === 'semopFilterRegiao'){ semopFilters.regiao = t.value; semopExtra = 0; renderSemOp(); }
+    if(t.id === 'semopFilterServico'){ semopFilters.servico = t.value; semopExtra = 0; renderSemOp(); }
+    if(t.id === 'semopFilterSituacao'){ semopFilters.situacao = t.value; semopExtra = 0; renderSemOp(); }
+  });
+  document.getElementById('btnSemOpAdd').addEventListener('click', () => {
+    const v = document.getElementById('semopAddSelect').value;
+    if(!v) return;
+    if(!isSemOpServico(v)) SEMOP.servicos.push(v);
+    semopChanged(); showToast('Serviço incluído no SEM OP');
+  });
+  document.getElementById('semopSearch').addEventListener('input', debounce(e => { semopFilters.q = e.target.value; semopExtra = 0; renderSemOp(); }, 180));
+  document.getElementById('btnSemOpExport').addEventListener('click', () => exportRows(semopFilteredRows(), 'os_sem_op', {title:'Relig/Restab · SEM OP', sheetName:'SEM OP'}));
+  document.addEventListener('click', e => { const k = e.target.closest('[data-tab-go]'); if(k) switchTab(k.dataset.tabGo); });
+})();
+
 /* ---------------- navegação filtrada (estados clicáveis) ---------------- */
 function goToOrders(f){
   f = f || {};
@@ -4482,8 +4714,8 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
-const CFG_KPI_LABELS = {total:'Total de OS', despachada:'Despachadas', planejada:'Planejadas', plannable:'Planejáveis', reprogramavel:'Reprogramáveis', atraso:'Em atraso', h24:'Vencendo em <24h'};
-const CFG_NOTIF_LABELS = {atraso:'OS em atraso', h24:'Vencendo em <24h', reprog:'Reprogramáveis', urgente:'OS urgentes', etypa:'Atrasos da Etypa', importacao:'Resumo da última importação', automacao:'Falha na automação', desatualizada:'Base desatualizada'};
+const CFG_KPI_LABELS = {total:'Total de OS', despachada:'Despachadas', planejada:'Planejadas', plannable:'Planejáveis', reprogramavel:'Reprogramáveis', atraso:'Em atraso', h24:'Vencendo em <24h', semop:'SEM OP'};
+const CFG_NOTIF_LABELS = {atraso:'OS em atraso', h24:'Vencendo em <24h', reprog:'Reprogramáveis', urgente:'OS urgentes', semop:'SEM OP em atraso', etypa:'Atrasos da Etypa', importacao:'Resumo da última importação', automacao:'Falha na automação', desatualizada:'Base desatualizada'};
 function applyConfigChange(msg){
   saveConfig();
   try{ refreshDashboard(); }catch(err){}
@@ -4624,7 +4856,7 @@ function tickPrazos(){
   if(pop && pop.classList.contains('show')) return; // não fecha o popup enquanto está aberto
   refreshSituacaoNow();
   try{ maybeRecordTick(); }catch(err){}
-  [renderKpiRow, renderMiniKpis, renderAnalytics, renderTable, renderLateTable, renderNotifications, renderEtypaLate, updateEtypaBadges].forEach(step => {
+  [renderKpiRow, renderMiniKpis, renderAnalytics, renderTable, renderLateTable, renderNotifications, renderEtypaLate, updateEtypaBadges, renderSemOp].forEach(step => {
     try{ step(); }catch(err){ console.error('Primarização · falha ao atualizar prazos', step.name, err); }
   });
 }
